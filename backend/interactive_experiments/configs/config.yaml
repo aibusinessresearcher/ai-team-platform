@@ -1,0 +1,9 @@
+defaults:
+  - task: student_body_president
+  - _self_
+
+# Override Hydra's logging configuration block
+hydra:
+  job_logging:
+    root:
+      handlers: [file]

@@ -1,0 +1,30 @@
+# Task configuration
+max_rounds: 2
+team_interdependence_type: team # (pooled, sequential, reciprocal_chain, reciprocal_subgroups, team)
+input_prompt_file: interactive_experiments/prompts/student_body_president.json
+randomize_speaking_order: true  # If true, randomize the speaking order in each round. If false, agents speak in fixed order (agent_ids order).
+randomize_final_submitter: true  # If true, randomly select an agent to submit the final ranking. If false, use agent 0.
+seed: 42
+task_type: ranking # (ranking, multiple_choice, short_answer, math)
+human_interaction: True
+
+# Backend configuration: Single backend type (all agents use same provider/model)
+backend:
+  provider: "gemini_direct"
+  model: "gemini-3.8-flash"
+  temperature: 0.7
+
+# Number of agents 
+num_agents: 4
+small_groups: [[0,1], [2,3]]
+small_group_reps: [1,2]
+small_group_rounds: 2
+
+# API keys (loaded from environment)
+rcgenai_api_key: ${oc.env:RCGENAI_API_KEY,null}
+
+# Override Hydra's logging configuration block
+hydra:
+  job_logging:
+    root:
+      handlers: [file]

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Multi-Agent Research Web Interface">
+  <title>{% block title %}AI Team Platform{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css?v=15">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="brand">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+    AI Team Platform
+  </a>
+  <nav class="top-nav" id="topNav">
+    <a href="/">Overview</a>
+    <a href="/pure-ai">Pure AI Team Study Builder</a>
+    <a href="/hitl">AI Team with Human-in-the-Loop Study Builder</a>
+    <a href="/interdependence">Interdependence Models</a>
+    <a href="/task-library">Task Library</a>
+    <a href="/research-capabilities">Research Capabilities</a>
+  </nav>
+</header>
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<footer>
+  AI Team Platform
+</footer>
+
+<!-- ==================== Custom Info Modal ==================== -->
+<div class="modal-overlay" id="infoModalOverlay" onclick="closeInfoModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="infoModalTitle">Information</h3>
+      <button class="modal-close" onclick="closeInfoModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="infoModalBody">
+      <!-- Content injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Summary Modal ==================== -->
+<div class="modal-overlay" id="summaryModalOverlay">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Verify Configuration</h3>
+      <button class="modal-close" onclick="closeSummaryModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="summaryModalBody">
+      <!-- Content injected by JS -->
+    </div>
+    <div style="padding: 1rem 2rem; border-top: 1px solid var(--card-border); display: flex; justify-content: flex-end; gap: 1rem; background: #f8f9fa;">
+      <button class="button secondary" onclick="closeSummaryModal()">Cancel</button>
+      <button class="button button-accent" id="summaryConfirmBtn">Confirm & Launch</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js?v=10"></script>
+<script src="/static/llm_providers.js?v=2"></script>
+<script>
+(function() {
+  var path = window.location.pathname;
+  document.querySelectorAll('.top-nav a').forEach(function(a) {
+    var href = a.getAttribute('href');
+    if (href === '/') {
+      if (path === '/') a.classList.add('active');
+    } else if (path.startsWith(href)) {
+      a.classList.add('active');
+    }
+  });
+})();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

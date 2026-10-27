@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teamwork"
+version = "0.1.0"
+description = "Toolkit for experimenting with multi-agent LLM teamwork dynamics"
+requires-python = ">=3.10"
+dependencies = [
+    "openai==3.39.0",
+    "anthropic==2.3.0",
+    "python-dotenv==1.0.1",
+    "hydra-core==1.3.8",
+    "omegaconf==2.3.1",
+    "pydantic==2.14.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "pyright",
+]
+
+[tool.setuptools.packages.find]
+include = ["teamwork*"]
+exclude = ["experiments*", "tests*"]
+
+
+[tool.ruff]
+extend-exclude = ["*.ipynb"]

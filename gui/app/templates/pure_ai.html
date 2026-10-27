@@ -1,0 +1,1169 @@
+{% extends "base.html" %}
+{% block title %}Pure AI Team Study Builder{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Reset main padding for this page ── */
+  main { padding: 0 !important; }
+
+  /* ── Page variables ── */
+  :root {
+    --p-bg: #f6f7fb;
+    --p-panel: #ffffff;
+    --p-ink: #18202a;
+    --p-muted: #667085;
+    --p-line: #e5e7eb;
+    --p-navy: #1f2a44;
+    --p-blue: #3454d1;
+    --p-blue2: #eef2ff;
+    --p-green: #2f7d59;
+    --p-green2: #edf8f2;
+    --p-orange: #b85c1e;
+    --p-shadow: 0 4px 20px rgba(31,42,68,.07);
+  }
+
+  /* ── Page Shell ── */
+  .pb-shell {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* ── Hero ── */
+  .pb-hero {
+    padding: 24px 32px;
+    background: var(--p-panel);
+    border-radius: 20px;
+    box-shadow: var(--p-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    border: 1px solid var(--p-line);
+  }
+  .pb-hero-tag { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--p-blue); margin-bottom: 6px; }
+  .pb-hero h1 { font-size: 26px; font-weight: 700; color: var(--p-navy); margin: 0 0 6px; }
+  .pb-hero p  { font-size: 13px; color: var(--p-muted); margin: 0; max-width: 680px; line-height: 1.5; }
+  .pb-badge {
+    font-size: 11px; font-weight: 700; color: var(--p-blue);
+    background: var(--p-blue2); border: 1px solid #dce3ff;
+    padding: 6px 11px; border-radius: 999px; white-space: nowrap;
+  }
+
+  /* ── Layout: sidebar + work ── */
+  .pb-layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ── Sidebar (steps) ── */
+  .pb-steps {
+    padding: 16px;
+    position: sticky;
+    top: 85px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    background: var(--p-panel);
+    border-radius: 20px;
+    box-shadow: var(--p-shadow);
+    border: 1px solid var(--p-line);
+  }
+  .pb-step {
+    display: flex; gap: 10px; padding: 10px 9px;
+    border-radius: 10px; cursor: pointer; align-items: flex-start;
+    transition: background .12s;
+  }
+  .pb-step:hover { background: #f8fafc; }
+  .pb-step.active { background: var(--p-blue2); }
+  .pb-step.done .pb-num { background: var(--p-green); color: #fff; }
+  .pb-num {
+    width: 26px; height: 26px; border-radius: 8px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    background: #f2f4f7; color: var(--p-muted); font-size: 12px; font-weight: 700;
+  }
+  .pb-step.active .pb-num { background: var(--p-blue); color: #fff; }
+  .pb-step strong { font-size: 13px; color: var(--p-navy); display: block; font-weight: 600; }
+  .pb-step span   { font-size: 11px; color: var(--p-muted); display: block; margin-top: 2px; line-height: 1.3; }
+
+  /* ── Work area ── */
+  .pb-work {
+    padding: 32px 36px 48px;
+    background: var(--p-panel);
+    border-radius: 20px;
+    box-shadow: var(--p-shadow);
+    border: 1px solid var(--p-line);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* ── Section head ── */
+  .pb-section-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 12px; margin-bottom: 20px;
+  }
+  .pb-section-head h2 { margin: 0; color: var(--p-navy); font-size: 22px; font-weight: 700; }
+  .pb-section-head p  { margin: 5px 0 0; color: var(--p-muted); font-size: 13px; max-width: 620px; line-height: 1.45; }
+
+  /* ── Fields ── */
+  .pb-field { margin-bottom: 14px; }
+  .pb-field label { display: block; font-size: 12px; font-weight: 600; color: #344054; margin-bottom: 6px; }
+  .pb-field label .fw { font-weight: 400; color: var(--p-muted); }
+  .pb-field input,
+  .pb-field select,
+  .pb-field textarea {
+    width: 100%; border: 1px solid #d0d5dd; border-radius: 10px;
+    background: #fff; padding: 10px 11px; color: var(--p-ink);
+    font: inherit; outline: none; box-sizing: border-box;
+  }
+  .pb-field textarea { min-height: 86px; resize: vertical; }
+  .pb-field input:focus,
+  .pb-field select:focus,
+  .pb-field textarea:focus {
+    border-color: #8ea2ff; box-shadow: 0 0 0 3px rgba(52,84,209,.08);
+  }
+  .pb-field .pb-note { font-size: 11px; color: var(--p-muted); margin-top: 5px; line-height: 1.4; }
+  .pb-fieldrow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pb-readonly { background: #f8fafc !important; color: #667085 !important; }
+
+  /* ── Cards (structure / task) ── */
+  .pb-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pb-card {
+    border: 1px solid var(--p-line); border-radius: 14px; padding: 14px;
+    background: #fff; cursor: pointer; transition: .15s; position: relative;
+  }
+  .pb-card:hover { transform: translateY(-1px); border-color: #c9d3ff; }
+  .pb-card.selected {
+    border: 2px solid var(--p-blue); padding: 13px;
+    background: #fbfcff; box-shadow: 0 6px 20px rgba(52,84,209,.09);
+  }
+  .pb-card h3 { margin: 0 0 5px; font-size: 15px; color: var(--p-navy); font-weight: 600; }
+  .pb-card p  { margin: 0; color: var(--p-muted); font-size: 12px; line-height: 1.4; }
+  .pb-check {
+    position: absolute; right: 10px; top: 10px; width: 20px; height: 20px;
+    border-radius: 50%; background: var(--p-blue); color: #fff;
+    display: none; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+  }
+  .pb-card.selected .pb-check { display: flex; }
+  .pb-kicker {
+    font-size: 10px; font-weight: 700; color: #6d4aff;
+    text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px;
+  }
+  .pb-cite { font-size: 10px; color: #667085; margin-top: 9px; border-top: 1px solid #eef1f4; padding-top: 8px; }
+
+  /* ── Diagram ── */
+  .pb-diagram {
+    min-height: 124px; height: 124px; background: #f8fafc; border: 1px dashed #d7dde8;
+    border-radius: 10px; margin: 10px 0 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--p-blue); font-size: 13px; font-weight: 600; gap: 6px; padding: 6px 10px;
+    box-sizing: border-box;
+  }
+  .pb-diagram svg, .pb-diagram .iv-svg { width: 100%; height: 100%; max-height: 118px; overflow: visible; display: block; }
+  .pb-structure-svg { width: 100%; height: 96px; overflow: visible; }
+  .pb-structure-svg .member { fill: #d92938; stroke: #b91c1c; stroke-width: 1.5; }
+  .pb-structure-svg .output { fill: #1b6288; stroke: #155070; stroke-width: 1.5; }
+  .pb-structure-svg .flow { fill: none; stroke: #1a1a1a; stroke-width: 1.6; }
+  .pb-structure-svg text { font: 700 11px system-ui, sans-serif; fill: #ffffff; text-anchor: middle; dominant-baseline: central; }
+  .pb-structure-svg .output-text { fill: #fff; font-weight: 600; font-size: 11px; }
+
+  /* ── Live Animation Flow Button ── */
+  .pb-live-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 52%, #4f46e5 100%);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 8px;
+    padding: 8px 15px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35), 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .pb-live-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.48), 0 2px 6px rgba(0, 0, 0, 0.12);
+    filter: brightness(1.08);
+    color: #ffffff !important;
+  }
+  .pb-live-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  }
+  .pb-live-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    animation: pbLivePulse 1.8s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pbLivePulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 7px rgba(34, 197, 94, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  }
+  .pb-live-arrow {
+    font-size: 13px;
+    font-weight: 700;
+    transition: transform 0.15s ease;
+  }
+  .pb-live-btn:hover .pb-live-arrow {
+    transform: translateX(3px);
+  }
+
+  /* ── Meta chips ── */
+  .pb-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .pb-chip { font-size: 10px; color: #475467; background: #f2f4f7; border-radius: 999px; padding: 5px 8px; }
+
+  /* ── Subhead divider ── */
+  .pb-subhead {
+    font-size: 13px; color: var(--p-navy); font-weight: 700;
+    margin: 18px 0 9px; display: flex; align-items: center; gap: 8px;
+  }
+  .pb-subhead::after { content: ""; height: 1px; background: var(--p-line); flex: 1; }
+  .pb-hint { font-size: 11px; color: var(--p-muted); line-height: 1.45; margin: -3px 0 12px; }
+
+  /* ── Agent cards ── */
+  .pb-agent-list { display: grid; gap: 10px; margin-top: 10px; }
+  .pb-agent-card { border: 1px solid var(--p-line); border-radius: 12px; padding: 12px; background: #fafbfc; }
+  .pb-agent-card h4 { font-size: 12px; margin: 0 0 8px; color: var(--p-navy); font-weight: 600; }
+
+  /* ── Toggle-card ── */
+  .pb-toggle-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pb-toggle-card {
+    display: flex; align-items: flex-start; gap: 8px;
+    border: 1px solid var(--p-line); border-radius: 11px; padding: 11px 12px;
+    background: #fff; flex: 1; min-width: 165px; cursor: pointer;
+  }
+  .pb-toggle-card input { margin-top: 2px; flex-shrink: 0; }
+  .pb-toggle-card b  { display: block; font-size: 12px; color: var(--p-navy); font-weight: 600; }
+  .pb-toggle-card span { display: block; font-size: 10px; color: var(--p-muted); margin-top: 3px; line-height: 1.35; }
+
+  /* ── Simulation matrix ── */
+  .pb-matrix {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    margin-top: 10px; font-size: 12px;
+  }
+  .pb-matrix th, .pb-matrix td {
+    border-right: 1px solid var(--p-line); border-bottom: 1px solid var(--p-line);
+    padding: 9px 10px; text-align: left;
+  }
+  .pb-matrix th:first-child, .pb-matrix td:first-child { border-left: 1px solid var(--p-line); }
+  .pb-matrix tr:first-child th { border-top: 1px solid var(--p-line); }
+  .pb-matrix th:first-child { border-top-left-radius: 10px; }
+  .pb-matrix th:last-child  { border-top-right-radius: 10px; }
+  .pb-matrix tr:last-child td:first-child { border-bottom-left-radius: 10px; }
+  .pb-matrix tr:last-child td:last-child  { border-bottom-right-radius: 10px; }
+  .pb-matrix th { background: #f8fafc; color: #475467; font-size: 11px; font-weight: 600; }
+
+  /* ── LLM ── */
+  .pb-llm-box { border: 1px solid var(--p-line); border-radius: 12px; padding: 13px; margin-bottom: 12px; background: #fafbfc; }
+  .pb-llm-agent { display: grid; grid-template-columns: 80px 1fr 1fr; gap: 8px; align-items: end; border-bottom: 1px solid var(--p-line); padding: 9px 0; }
+  .pb-llm-agent:last-child { border-bottom: 0; }
+  .pb-llm-agent b { font-size: 11px; color: var(--p-navy); padding-bottom: 11px; font-weight: 600; }
+  .pb-mini-field label { display: block; font-size: 10px; color: var(--p-muted); font-weight: 700; margin-bottom: 4px; }
+  .pb-mini-field select { width: 100%; border: 1px solid #d0d5dd; border-radius: 9px; padding: 9px; background: white; font: inherit; }
+  .pb-mock-callout {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 11px 12px; border: 1px solid #d7efe1; background: var(--p-green2);
+    border-radius: 10px; margin-bottom: 14px;
+  }
+  .pb-mock-callout div { font-size: 11px; color: #32654c; line-height: 1.4; }
+  .pb-advanced { margin-top: 13px; border: 1px solid var(--p-line); border-radius: 10px; overflow: hidden; }
+  .pb-advanced summary { cursor: pointer; padding: 10px 11px; font-size: 11px; font-weight: 700; color: #475467; background: #fafbfc; }
+  .pb-advanced .inside { padding: 12px 11px; }
+
+  /* ── Protocol/Review ── */
+  .pb-protocol { border: 1px solid var(--p-line); border-radius: 12px; padding: 14px; background: #fff; }
+  .pb-protocol h4 { margin: 0 0 12px; color: var(--p-navy); font-size: 15px; font-weight: 700; }
+  .pb-code {
+    white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px; line-height: 1.5; background: #101828; color: #e4e7ec;
+    border-radius: 10px; padding: 12px; max-height: 300px; overflow: auto;
+  }
+  .pb-audit { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .pb-audit div {
+    font-size: 10px; background: var(--p-green2); color: var(--p-green);
+    padding: 6px 8px; border-radius: 7px; border: 1px solid #d7efe1; font-weight: 600;
+  }
+
+  /* ── Nav buttons ── */
+  .pb-buttons {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--p-line); gap: 10px;
+  }
+  .pb-btn {
+    border: 1px solid #d0d5dd; background: white; color: #344054;
+    padding: 10px 15px; border-radius: 10px; font-weight: 600; font-size: 12px;
+    cursor: pointer; font: inherit; transition: .12s;
+  }
+  .pb-btn:hover:not(:disabled) { background: #f8fafc; }
+  .pb-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .pb-btn.primary { background: var(--p-blue); color: #fff; border-color: var(--p-blue); }
+  .pb-btn.primary:hover:not(:disabled) { background: #2646c0; }
+  .pb-btn.ghost  { border-color: transparent; background: #f8fafc; }
+  .pb-btn.small  { padding: 6px 9px; font-size: 11px; border-radius: 8px; }
+
+  /* ── Progress card ── */
+  .pb-progress-card {
+    margin: 16px 28px; background: #fff; border: 1px solid var(--p-line);
+    border-radius: 14px; padding: 20px 22px; box-shadow: var(--p-shadow);
+  }
+  .pb-progress-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .pb-progress-bar-track { background: #e5e7eb; border-radius: 999px; height: 8px; width: 100%; }
+  .pb-progress-bar-fill  { background: var(--p-blue); border-radius: 999px; height: 8px; width: 0%; transition: width .3s; }
+  .pb-status { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 999px; background: #f2f4f7; color: #475467; font-size: 11px; font-weight: 600; }
+  .pb-status.running { background: #dcfce7; color: #166534; }
+  .pb-status.done    { background: #dbeafe; color: #1d4ed8; }
+  .pb-status.error   { background: #fee2e2; color: #991b1b; }
+
+  @media (max-width: 900px) {
+    .pb-layout { grid-template-columns: 1fr; }
+    .pb-steps  { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--p-line); display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; }
+    .pb-step   { flex: 1; min-width: 120px; }
+    .pb-cards, .pb-fieldrow { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pb-shell">
+
+<!-- ── Hero ──────────────────────────────────────────────────────── -->
+<div class="pb-hero">
+  <div>
+    <div class="pb-hero-tag">Pure AI Team Builder</div>
+    <h1>Configure a Pure AI team study</h1>
+    <p>Configure the research design, team, simulation, and LLM settings before launching a batch of AI-only team simulations.</p>
+  </div>
+  <span class="pb-badge">Pure AI Team</span>
+</div>
+
+<!-- ── 2-column layout ───────────────────────────────────────────── -->
+<div class="pb-layout">
+
+  <!-- Sidebar steps -->
+  <aside class="pb-steps" id="pbSteps"></aside>
+
+  <!-- Work area -->
+  <div>
+    <div class="pb-work" id="pbWork"></div>
+
+    <!-- Progress card (hidden until experiment starts) -->
+    <div class="pb-progress-card" id="pbProgressCard" style="display:none;">
+      <div class="pb-progress-head">
+        <h3 style="margin:0; font-size:16px; color:var(--p-navy);">Simulation Progress</h3>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="pb-btn small danger" id="pbStopBtn" style="display:none;" onclick="pbStopExperiment()">Stop</button>
+          <span class="pb-status running" id="pbStatusBadge">RUNNING</span>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:6px;">
+        <span id="pbProgressText">0 / 0 completed</span>
+        <span id="pbProgressPct">0%</span>
+      </div>
+      <div class="pb-progress-bar-track"><div class="pb-progress-bar-fill" id="pbProgressFill"></div></div>
+      <p id="pbErrorText" style="display:none; color:#dc2626; font-size:12px; white-space:pre-wrap; margin-top:12px;"></p>
+      <div id="pbResultsActions" style="display:none; text-align:right; margin-top:12px;">
+        <a class="pb-btn primary" id="pbDashboardLink" href="#">View Results Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/interdependence.js?v=4"></script>
+<script>
+/* ================================================================
+   Pure AI Builder — full state-driven UI (matches v5 prototype)
+   ================================================================ */
+
+const STEPS = [
+  ['Research Design',                  'Study title &amp; question'],
+  ['Task Interdependence Structure',   'Interdependence'],
+  ['Task Configuration',              'Base task or custom'],
+  ['AI Team Configuration',           'Agents, rounds &amp; context'],
+  ['Simulation Settings',             'Replications &amp; metadata'],
+  ['LLM Configuration',               'Models, API key &amp; demo'],
+  ['Review &amp; Launch',             'Verify, save &amp; run']
+];
+
+const st = {
+  step: 0,
+  phenomenon: 'Coordination under distributed expertise',
+  researchQuestion: 'How does interdependence structure affect whether AI teams surface and use unique expertise?',
+  structure: 'Reciprocal',
+  task: 'Hidden-Profile Decision Task',
+  customTaskName: '', customTaskPrompt: '', customTaskScoring: '', taskScored: 'Yes',
+  agents: 4, rounds: 6,
+  composition: 'Heterogeneous agents',
+  agentDetails: [
+    'Domain expert. Receives unique evidence A and is instructed to surface relevant expertise.',
+    'Skeptical evaluator. Receives unique evidence B and challenges unsupported claims.',
+    'Integrator. Receives unique evidence C and looks for connections across contributions.',
+    'Generalist. Receives unique evidence D and focuses on the overall team objective.'
+  ],
+  reporterAgent: 'None',
+  reps: 50, concurrency: 4, seed: '2026', conditionName: 'Main condition', researcherNotes: '',
+  llmAssignment: 'Same model for all agents',
+  provider: 'Mock', model: 'Mock Backend (Demo)', customModelId: '', apiKey: '',
+  temperature: 0.7, maxTokens: 4000, baseURL: '', timeout: 120,
+  perAgentLLM: []
+};
+
+/* ensure perAgentLLM length matches agents */
+function ensureArrays() {
+  while (st.perAgentLLM.length < st.agents)
+    st.perAgentLLM.push({ provider: st.provider, model: st.model, customModelId: st.customModelId || '', apiKey: '' });
+  st.perAgentLLM = st.perAgentLLM.slice(0, st.agents);
+  while (st.agentDetails.length < st.agents) st.agentDetails.push('');
+  st.agentDetails = st.agentDetails.slice(0, st.agents);
+}
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+function sel(v, x) { return v === x ? ' selected' : ''; }
+
+/* ── Render sidebar ── */
+function renderSteps() {
+  document.getElementById('pbSteps').innerHTML = STEPS.map((s, i) => `
+    <div class="pb-step ${i === st.step ? 'active' : ''} ${i < st.step ? 'done' : ''}" onclick="go(${i})">
+      <div class="pb-num">${i < st.step ? '✓' : i + 1}</div>
+      <div><strong>${s[0]}</strong><span>${s[1]}</span></div>
+    </div>`).join('');
+}
+
+/* ── Nav buttons ── */
+function navBtns(label = 'Continue') {
+  return `
+  <div class="pb-buttons">
+    <button class="pb-btn" onclick="go(st.step-1)" ${st.step === 0 ? 'disabled' : ''}>← Back</button>
+    <div style="display:flex;gap:8px;">
+      <button class="pb-btn ghost" onclick="window.location='/'">Exit builder</button>
+      <button class="pb-btn primary" onclick="go(st.step+1)" ${st.step === STEPS.length-1 ? 'style=display:none' : ''}>${label} →</button>
+    </div>
+  </div>`;
+}
+
+/* ── Step 1: Research Design ── */
+function renderResearch() {
+  return `
+  <div class="pb-section-head">
+    <div><h2>1. Research Design</h2><p>Define the study title and research question for this study.</p></div>
+    <span class="pb-badge">Research design</span>
+  </div>
+  <div class="pb-field">
+    <label>Study Title</label>
+    <input value="${esc(st.phenomenon)}" placeholder="e.g. Coordination under distributed expertise" oninput="st.phenomenon=this.value">
+  </div>
+  <div class="pb-field">
+    <label>Research Question</label>
+    <textarea oninput="st.researchQuestion=this.value">${esc(st.researchQuestion)}</textarea>
+  </div>
+  ${navBtns()}`;
+}
+
+/* ── Step 2: Task Interdependence Structure ── */
+function structDiagram(name) {
+  if (typeof InterdependenceViz !== 'undefined') {
+    return `<div class="pb-diagram">${InterdependenceViz.getDiagramSVG(name, { interactive: false })}</div>`;
+  }
+  const defs = `<defs><marker id="pbArrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#1a1a1a"/></marker></defs>`;
+  const member = (x, y, n) => `<circle fill="#d92938" cx="${x}" cy="${y}" r="15"/><text fill="#fff" font-weight="700" font-size="11" x="${x}" y="${y}">${n}</text>`;
+  const output = (x, y) => `<rect fill="#1b6288" x="${x}" y="${y}" width="48" height="24" rx="6"/><text fill="#fff" font-weight="600" font-size="10" x="${x+24}" y="${y+12}">Output</text>`;
+  let body = '';
+  if (name === 'Pooled') {
+    body = `${output(116,4)}
+      <path class="flow" marker-end="url(#pbArrow)" d="M42 72 L124 29"/><path class="flow" marker-end="url(#pbArrow)" d="M96 68 L136 29"/>
+      <path class="flow" marker-end="url(#pbArrow)" d="M184 68 L151 29"/><path class="flow" marker-end="url(#pbArrow)" d="M238 72 L158 29"/>
+      ${member(34,82,1)}${member(92,82,2)}${member(188,82,3)}${member(246,82,4)}`;
+  } else if (name === 'Sequential') {
+    body = `<path class="flow" marker-end="url(#pbArrow)" d="M50 52 L70 52"/><path class="flow" marker-end="url(#pbArrow)" d="M106 52 L126 52"/>
+      <path class="flow" marker-end="url(#pbArrow)" d="M162 52 L182 52"/><path class="flow" marker-end="url(#pbArrow)" d="M218 52 L229 52"/>
+      ${member(34,52,1)}${member(90,52,2)}${member(146,52,3)}${member(202,52,4)}${output(232,39)}`;
+  } else if (name === 'Reciprocal — Chain' || name === 'Reciprocal') {
+    body = `${output(116,3)}<path class="flow" marker-end="url(#pbArrow)" d="M140 75 L140 31"/>
+      <path class="flow" marker-end="url(#pbArrow)" d="M51 69 L72 69"/><path class="flow" marker-end="url(#pbArrow)" d="M69 78 L48 78"/>
+      <path class="flow" marker-end="url(#pbArrow)" d="M107 69 L128 69"/><path class="flow" marker-end="url(#pbArrow)" d="M125 78 L104 78"/>
+      <path class="flow" marker-end="url(#pbArrow)" d="M163 69 L184 69"/><path class="flow" marker-end="url(#pbArrow)" d="M181 78 L160 78"/>
+      ${member(34,74,1)}${member(90,74,2)}${member(146,74,3)}${member(202,74,4)}`;
+  } else {
+    body = `<path class="flow" marker-end="url(#pbArrow)" d="M54 27 L102 27"/><path class="flow" marker-end="url(#pbArrow)" d="M100 34 L52 34"/>
+      <path class="flow" marker-end="url(#pbArrow)" d="M38 45 L38 67"/><path class="flow" marker-end="url(#pbArrow)" d="M46 65 L46 43"/>
+      <path class="flow" marker-end="url(#pbArrow)" d="M119 45 L119 67"/><path class="flow" marker-end="url(#pbArrow)" d="M127 65 L127 43"/>
+      <path class="flow" marker-end="url(#pbArrow)" d="M53 41 L105 69"/><path class="flow" marker-end="url(#pbArrow)" d="M102 42 L51 68"/>
+      <path class="flow" marker-end="url(#pbArrow)" d="M54 81 L102 81"/><path class="flow" marker-end="url(#pbArrow)" d="M100 88 L52 88"/>
+      <path class="flow" marker-end="url(#pbArrow)" d="M137 56 L204 56"/>
+      ${member(38,28,1)}${member(119,28,2)}${member(38,80,3)}${member(119,80,4)}${output(207,43)}`;
+  }
+  return `<div class="pb-diagram"><svg class="pb-structure-svg" viewBox="0 0 280 104" role="img" aria-label="${name} interdependence diagram">${defs}${body}</svg></div>`;
+}
+
+function normalizeStructureName() {
+  const legacy = {
+    'Reciprocal — Chain': 'Reciprocal',
+    'Team — Comprehensive': 'Team / Comprehensive',
+    'Team - Comprehensive': 'Team / Comprehensive',
+  };
+  if (legacy[st.structure]) st.structure = legacy[st.structure];
+}
+
+function renderStructure() {
+  normalizeStructureName();
+  const structs = [
+    ['Pooled','Members work independently; contributions are aggregated into a shared output.','Independent contribution','Aggregation'],
+    ['Sequential','Work is passed through structured handoffs in a fixed pipeline order.','Workflow order','Handoffs'],
+    ['Reciprocal','Adjacent members exchange outputs in both directions along a chain.','Bidirectional chain','Iterative handoffs'],
+    ['Team / Comprehensive','Every member exchanges outputs with every other member.','Fully connected','Mutual adjustment']
+  ];
+  return `
+  <div class="pb-section-head">
+    <div><h2>2. Task Interdependence Structure</h2></div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button class="pb-live-btn" type="button" onclick="window.open('/interdependence?animate=1','_blank')">
+        <span class="pb-live-pulse"></span>
+        <span>Live Animation Flow</span>
+        <span class="pb-live-arrow">→</span>
+      </button>
+      <span class="pb-badge">Interdependence</span>
+    </div>
+  </div>
+  <div class="pb-field">
+    <label>Interdependence Structure</label>
+    <div class="pb-cards">
+      ${structs.map(s => `
+      <div class="pb-card ${st.structure === s[0] ? 'selected' : ''}" onclick="st.structure='${s[0]}';render()">
+        <span class="pb-check">✓</span>
+        <h3>${s[0]}</h3>
+        ${structDiagram(s[0])}
+      </div>`).join('')}
+    </div>
+  </div>
+  ${navBtns()}`;
+}
+
+/* ── Step 3: Task ── */
+function renderTask() {
+  const tasks = [
+    ['Hidden-Profile Decision Task','Information Integration',"Unique and shared 'information' is distributed across members; success requires surfacing and integrating unique information.",'Information sharing','Expertise recognition','Objective scoring'],
+    ['Specialist Coordination Task','Distributed Expertise','Members hold differentiated expertise required for a joint solution. Each specialist contributes domain-specific knowledge toward a shared outcome.','Specialization','Coordination','Expertise utilization'],
+    ['Ranking / Selection Task','Judgment &amp; Decision Making','Teams compare alternatives using distributed criteria and produce a scored decision.','Consensus','Decision quality','Process trace'],
+    ['Idea Generation + Evaluation','Creativity &amp; Innovation','Separate divergence and convergence phases for studying novelty and selection.','Creativity','Mutual adjustment','Evaluation'],
+    ['Custom Task','Researcher Defined','Bring your own task prompt, instructions, scenario, and optional scoring guidance.','Custom prompt','Custom domain','Custom scoring']
+  ];
+  return `
+  <div class="pb-section-head">
+    <div><h2>3. Task Configuration</h2><p>Select a base task adapted from team research, or provide a custom task prompt.</p></div>
+    <button class="pb-btn" onclick="window.open('/task-library','_blank')">Open Task Library</button>
+  </div>
+  <div class="pb-field">
+    <label>Select Base Task</label>
+    <div class="pb-cards">
+      ${tasks.map(t => `
+      <div class="pb-card task ${st.task === t[0] ? 'selected' : ''}" onclick="st.task='${t[0].replace(/'/g,"\\'")}';render()">
+        <span class="pb-check">✓</span>
+        <div class="pb-kicker">${t[1]}</div>
+        <h3>${t[0]}</h3><p>${t[2]}</p>
+        <div class="pb-meta">
+          <span class="pb-chip">${t[3]}</span>
+          <span class="pb-chip">${t[4]}</span>
+          <span class="pb-chip">${t[5]}</span>
+        </div>
+        ${t[0] !== 'Custom Task' ? '<div class="pb-cite">View theoretical basis &bull; View scoring protocol &bull; View implementation notes</div>' : ''}
+      </div>`).join('')}
+    </div>
+  </div>
+  ${st.task === 'Custom Task' ? `
+  <div class="pb-subhead">Custom Task</div>
+  <div class="pb-field">
+    <label>Custom Task Prompt</label>
+    <textarea oninput="st.customTaskPrompt=this.value" placeholder="Describe the task, scenario, information, constraints, and desired output...">${esc(st.customTaskPrompt)}</textarea>
+  </div>
+  <div class="pb-fieldrow">
+    <div class="pb-field">
+      <label>Task Name</label>
+      <input value="${esc(st.customTaskName)}" placeholder="e.g. New product launch decision" oninput="st.customTaskName=this.value">
+    </div>
+    <div class="pb-field">
+      <label>Is this task scored?</label>
+      <select onchange="st.taskScored=this.value;render()">
+        <option${sel(st.taskScored,'Yes')}>Yes</option><option${sel(st.taskScored,'No')}>No</option>
+      </select>
+    </div>
+  </div>
+  ${st.taskScored === 'Yes' ? `<div class="pb-field"><label>Scoring / Evaluation Guidance (optional)</label><input value="${esc(st.customTaskScoring)}" placeholder="e.g. correct answer, rubric, or judge criteria" oninput="st.customTaskScoring=this.value"></div>` : ''}
+  ` : `
+  <div class="pb-field" style="max-width:300px;">
+    <label>Is this task scored?</label>
+    <select onchange="st.taskScored=this.value;render()">
+      <option${sel(st.taskScored,'Yes')}>Yes</option><option${sel(st.taskScored,'No')}>No</option>
+    </select>
+  </div>`}
+  ${navBtns()}`;
+}
+
+/* ── Step 4: Team ── */
+function renderTeam() {
+  ensureArrays();
+  return `
+  <div class="pb-section-head">
+    <div><h2>4. AI Team Configuration</h2><p>Configure the number of agents, discussion rounds, and whether agents share the same instructions or receive different context.</p></div>
+    <span class="pb-badge">Team configuration</span>
+  </div>
+  <div class="pb-fieldrow">
+    <div class="pb-field">
+      <label>Number of Agents</label>
+      <input type="number" min="2" max="12" value="${st.agents}" onchange="st.agents=Math.max(2,Math.min(12,+this.value||2));ensureArrays();render()">
+    </div>
+    <div class="pb-field">
+      <label>Discussion Rounds</label>
+      <input type="number" min="1" max="50" value="${st.rounds}" oninput="st.rounds=+this.value||1">
+    </div>
+  </div>
+  <div class="pb-fieldrow">
+    <div class="pb-field">
+      <label>Agent Composition</label>
+      <select onchange="st.composition=this.value;render()">
+        <option${sel(st.composition,'Homogeneous agents')}>Homogeneous agents</option>
+        <option${sel(st.composition,'Heterogeneous agents')}>Heterogeneous agents</option>
+      </select>
+    </div>
+    <div class="pb-field">
+      <label>Interdependence Structure</label>
+      <input class="pb-readonly" value="${esc(st.structure)}" readonly>
+    </div>
+  </div>
+  ${st.composition === 'Homogeneous agents' ? `
+  <div class="pb-field">
+    <label>Shared Agent Instructions / Context (optional)</label>
+    <textarea oninput="st.agentDetails[0]=this.value" placeholder="Shared role, expertise, information, persona, or task context...">${esc(st.agentDetails[0] || '')}</textarea>
+  </div>
+  ` : `
+  <div class="pb-subhead">Agent-Specific Instructions / Context</div>
+  <p class="pb-hint">Use one flexible box per agent for any combination of persona, expertise, private information, role, incentives, or constraints.</p>
+  <div class="pb-agent-list">
+    ${Array.from({length: st.agents}, (_, i) => `
+    <div class="pb-agent-card">
+      <h4>Agent ${i + 1}</h4>
+      <div class="pb-field" style="margin:0;">
+        <textarea oninput="st.agentDetails[${i}]=this.value" placeholder="Agent ${i+1} instructions, information, persona, expertise, or other context...">${esc(st.agentDetails[i] || '')}</textarea>
+      </div>
+    </div>`).join('')}
+  </div>`}
+  <div class="pb-field">
+    <label>Designated Reporter Agent (optional)</label>
+    <select onchange="st.reporterAgent=this.value">
+      <option${sel(st.reporterAgent,'None')}>None</option>
+      ${Array.from({length: st.agents}, (_, i) => `<option${sel(st.reporterAgent,String(i+1))}>Agent ${i+1}</option>`).join('')}
+    </select>
+    <div class="pb-note">Select which agent is responsible for organizing the output of the team into a final report.</div>
+  </div>
+  ${navBtns()}`;
+}
+
+/* ── Step 5: Simulation Settings ── */
+function renderExperiment() {
+  return `
+  <div class="pb-section-head">
+    <div><h2>5. Simulation Settings</h2><p>Configure batch size, concurrency, reproducibility settings, and experiment metadata.</p></div>
+    <span class="pb-badge">Simulation settings</span>
+  </div>
+  <div class="pb-fieldrow">
+    <div class="pb-field">
+      <label>Replications <span class="fw">(How many times to repeat the simulation)</span></label>
+      <input type="number" min="1" value="${st.reps}" oninput="st.reps=+this.value||1">
+    </div>
+    <div class="pb-field">
+      <label>Concurrency Limit <span class="fw">(How many simulations run in parallel)</span></label>
+      <input type="number" min="1" value="${st.concurrency}" oninput="st.concurrency=+this.value||1">
+    </div>
+  </div>
+  <div class="pb-fieldrow">
+    <div class="pb-field">
+      <label>Random Seed (optional, for reproducibility)</label>
+      <input value="${esc(st.seed)}" placeholder="e.g. 42" oninput="st.seed=this.value">
+    </div>
+    <div class="pb-field">
+      <label>Experiment Label (optional)</label>
+      <input value="${esc(st.conditionName)}" placeholder="e.g. pilot_study_v2" oninput="st.conditionName=this.value">
+    </div>
+  </div>
+  <div class="pb-field">
+    <label>Researcher Notes (saved with experiment metadata)</label>
+    <textarea oninput="st.researcherNotes=this.value" placeholder="Optional notes about hypotheses, conditions, implementation, or pilot decisions...">${esc(st.researcherNotes)}</textarea>
+  </div>
+  <table class="pb-matrix">
+    <tr><th>Experiment</th><th>Task</th><th>Agents</th><th>Structure</th><th>Rounds</th><th>Replications</th></tr>
+    <tr>
+      <td>${esc(st.conditionName || 'Untitled')}</td>
+      <td>${esc(displayTask())}</td>
+      <td>${st.agents}</td>
+      <td>${esc(st.structure)}</td>
+      <td>${st.rounds}</td>
+      <td>${st.reps}</td>
+    </tr>
+  </table>
+  ${navBtns()}`;
+}
+
+/* ── Step 6: LLM ── */
+function modelFieldHtml(provider, model, customModelId, agentIdx) {
+  const p = LlmCatalog.normalizeProvider(provider);
+  if (LlmCatalog.isOther(p)) {
+    const oninput = agentIdx === null ? 'st.customModelId=this.value' : `st.perAgentLLM[${agentIdx}].customModelId=this.value`;
+    return `
+    <div class="pb-field">
+      <label>Model</label>
+      <input type="text" value="${esc(customModelId || '')}" placeholder="provider/model-id · e.g. openai/gpt-4.1"
+        oninput="${oninput}">
+      <div class="pb-note">Use LiteLLM format <code>provider/model-name</code>. See
+        <a href="https://docs.litellm.ai/docs/providers" target="_blank" rel="noopener noreferrer">provider &amp; model IDs</a>.</div>
+    </div>`;
+  }
+  const onModel = agentIdx === null ? 'pbSetModel(null,this.value)' : `pbSetModel(${agentIdx},this.value)`;
+  return `
+    <div class="pb-field">
+      <label>Model</label>
+      <select onchange="${onModel}">${LlmCatalog.modelOptionsHtml(p, model)}</select>
+    </div>`;
+}
+function apiField(value, provider, model, idx) {
+  const mock = LlmCatalog.isMock(provider, model);
+  const oninput = idx === null ? 'st.apiKey=this.value' : `st.perAgentLLM[${idx}].apiKey=this.value`;
+  return `
+  <div class="pb-field">
+    <label>API Key ${mock ? '(not required for Mock Demo)' : '(required for live model access)'}</label>
+    <input type="password" value="${mock ? '' : esc(value)}" ${mock ? 'disabled' : ''} placeholder="${mock ? 'Mock agents run without a key' : 'Enter API key'}" oninput="${oninput}">
+    <div class="pb-note">API keys are used only for the active session and are not saved in Experiment History or exported protocols.</div>
+  </div>`;
+}
+
+function renderLLM() {
+  ensureArrays();
+  st.provider = LlmCatalog.normalizeProvider(st.provider);
+  LlmCatalog.syncModelsForSlice(st);
+  st.perAgentLLM.forEach((a) => {
+    a.provider = LlmCatalog.normalizeProvider(a.provider);
+    LlmCatalog.syncModelsForSlice(a);
+  });
+  return `
+  <div class="pb-section-head">
+    <div><h2>6. LLM Configuration</h2><p>Select the model(s) for your team. Enter the API key immediately after model selection, or use the Mock Demo without a key.</p></div>
+    <span class="pb-badge">LLM configuration</span>
+  </div>
+  <div class="pb-mock-callout">
+    <div>Want to test the interface without calling an external model? Use the Mock Demo. It does not require an API key.</div>
+    <button class="pb-btn small" onclick="useMockDemo()">Use Mock Demo</button>
+  </div>
+  <div class="pb-field">
+    <label>Model Assignment</label>
+    <select onchange="st.llmAssignment=this.value;render()">
+      <option${sel(st.llmAssignment,'Same model for all agents')}>Same model for all agents</option>
+      <option${sel(st.llmAssignment,'Configure model per agent')}>Configure model per agent</option>
+    </select>
+  </div>
+  ${st.llmAssignment === 'Same model for all agents' ? `
+  <div class="pb-llm-box">
+    <div class="pb-fieldrow">
+      <div class="pb-field">
+        <label>Provider</label>
+        <select onchange="pbSetProvider(null,this.value)">${LlmCatalog.providerOptionsHtml(st.provider)}</select>
+      </div>
+      ${modelFieldHtml(st.provider, st.model, st.customModelId, null)}
+    </div>
+    ${apiField(st.apiKey, st.provider, st.model, null)}
+  </div>
+  ` : `
+  <div class="pb-subhead">Select Models for Your Team</div>
+  <p class="pb-hint">Configure the provider and model for each agent. API keys appear directly after each model selection.</p>
+  ${Array.from({length: st.agents}, (_, i) => `
+  <div class="pb-llm-box">
+    <div class="pb-field" style="margin-bottom:8px;"><label>Agent ${i+1}</label></div>
+    <div class="pb-fieldrow">
+      <div class="pb-field">
+        <label>Provider</label>
+        <select onchange="pbSetProvider(${i},this.value)">${LlmCatalog.providerOptionsHtml(st.perAgentLLM[i].provider)}</select>
+      </div>
+      ${modelFieldHtml(st.perAgentLLM[i].provider, st.perAgentLLM[i].model, st.perAgentLLM[i].customModelId || '', i)}
+    </div>
+    ${apiField(st.perAgentLLM[i].apiKey, st.perAgentLLM[i].provider, st.perAgentLLM[i].model, i)}
+  </div>`).join('')}
+  `}
+  <div class="pb-subhead">Generation Settings</div>
+  <div class="pb-fieldrow">
+    <div class="pb-field">
+      <label>Temperature</label>
+      <input type="number" min="0" max="2" step="0.1" value="${st.temperature}" oninput="st.temperature=+this.value">
+    </div>
+    <div class="pb-field">
+      <label>Max Output Tokens</label>
+      <input type="number" min="100" value="${st.maxTokens}" oninput="st.maxTokens=+this.value">
+    </div>
+  </div>
+  <details class="pb-advanced">
+    <summary>Connection &amp; Advanced Settings</summary>
+    <div class="inside">
+      <div class="pb-fieldrow">
+        <div class="pb-field">
+          <label>Base URL (optional)</label>
+          <input value="${esc(st.baseURL)}" placeholder="https://api... or local endpoint" oninput="st.baseURL=this.value">
+        </div>
+        <div class="pb-field">
+          <label>Timeout (seconds)</label>
+          <input type="number" value="${st.timeout}" oninput="st.timeout=+this.value">
+        </div>
+      </div>
+    </div>
+  </details>
+  ${navBtns('Review configuration')}`;
+}
+
+/* ── Step 7: Review & Launch ── */
+function displayTask() { return st.task === 'Custom Task' ? (st.customTaskName || 'Custom Task') : st.task; }
+function protocolObj() {
+  ensureArrays();
+  const obj = {
+    builder: 'pure_ai_team',
+    research_question: st.researchQuestion,
+    phenomenon: st.phenomenon,
+    task: { type: st.task, name: displayTask(), scored: st.taskScored === 'Yes' }
+  };
+  if (st.task === 'Custom Task') {
+    obj.task.prompt = st.customTaskPrompt;
+    if (st.taskScored === 'Yes') obj.task.scoring = st.customTaskScoring;
+  }
+  obj.organizational_structure = st.structure;
+  obj.team = {
+    agents: Number(st.agents), discussion_rounds: Number(st.rounds),
+    composition: st.composition,
+    reporter_agent: st.reporterAgent === 'None' ? null : parseInt(st.reporterAgent),
+    instructions: st.composition === 'Homogeneous agents' ? [st.agentDetails[0] || ''] : st.agentDetails.slice(0, st.agents)
+  };
+  obj.simulation = {
+    replications: Number(st.reps), concurrency_limit: Number(st.concurrency),
+    seed: st.seed, experiment_label: st.conditionName, researcher_notes: st.researcherNotes
+  };
+  obj.llm = {
+    assignment: st.llmAssignment, temperature: Number(st.temperature),
+    max_output_tokens: Number(st.maxTokens), base_url: st.baseURL || null, timeout_seconds: Number(st.timeout)
+  };
+  if (st.llmAssignment === 'Same model for all agents') {
+    obj.llm.provider = st.provider;
+    obj.llm.model = LlmCatalog.displayModel(st.provider, st.model, st.customModelId);
+    obj.llm.model_id = LlmCatalog.resolveSlug(st.provider, st.model, st.customModelId);
+    obj.llm.mock_demo = LlmCatalog.isMock(st.provider, st.model);
+  } else {
+    obj.llm.agents = st.perAgentLLM.slice(0, st.agents).map(x => ({
+      provider: x.provider,
+      model: LlmCatalog.displayModel(x.provider, x.model, x.customModelId),
+      model_id: LlmCatalog.resolveSlug(x.provider, x.model, x.customModelId),
+      mock_demo: LlmCatalog.isMock(x.provider, x.model)
+    }));
+  }
+  obj.capture = ['configuration','agent instructions','prompts','model/version metadata','random seed','full interaction trace','scoring rules'];
+  return obj;
+}
+
+function renderProtocol() {
+  const spec = JSON.stringify(protocolObj(), null, 2);
+  const modelLabel = st.llmAssignment === 'Same model for all agents'
+    ? esc(LlmCatalog.displayModel(st.provider, st.model, st.customModelId))
+    : st.perAgentLLM.slice(0, st.agents).map(a => esc(LlmCatalog.displayModel(a.provider, a.model, a.customModelId))).join(', ');
+  return `
+  <div class="pb-section-head">
+    <div><h2>7. Review &amp; Launch</h2><p>Verify the configuration before launching. You can also save the configuration to Experiment History for later reuse.</p></div>
+    <span class="pb-badge">Verify configuration</span>
+  </div>
+
+  <!-- ── Human-readable summary ── -->
+  <div style="background:linear-gradient(135deg,#eff6ff 0%,#fff 100%);border:1px solid #dce3ff;border-radius:14px;padding:20px 22px;margin-bottom:16px;">
+    <div style="font-size:11px;font-weight:700;color:var(--p-blue);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Study at a Glance</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;">
+      <div style="background:#fff;border:1px solid #dce3ff;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:10px;color:#667085;margin-bottom:4px;">Research Question</div>
+        <div style="font-size:12px;color:var(--p-navy);font-weight:600;line-height:1.4;">${esc(st.researchQuestion)||'<em style="color:#aaa;">Not set</em>'}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #dce3ff;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:10px;color:#667085;margin-bottom:4px;">Task</div>
+        <div style="font-size:12px;color:var(--p-navy);font-weight:600;">${esc(displayTask())}</div>
+        <div style="font-size:10px;color:#667085;margin-top:2px;">Scored: ${st.taskScored}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #dce3ff;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:10px;color:#667085;margin-bottom:4px;">Team</div>
+        <div style="font-size:12px;color:var(--p-navy);font-weight:600;">${st.agents} agents · ${st.rounds} rounds</div>
+        <div style="font-size:10px;color:#667085;margin-top:2px;">${esc(st.composition)} · ${esc(st.structure)}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #dce3ff;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:10px;color:#667085;margin-bottom:4px;">Simulations &amp; Concurrency</div>
+        <div style="font-size:12px;color:var(--p-navy);font-weight:600;">${st.reps} replication${st.reps!==1?'s':''} · max ${st.concurrency} parallel</div>
+        ${st.conditionName ? `<div style="font-size:10px;color:#667085;margin-top:2px;">Label: ${esc(st.conditionName)}</div>` : ''}
+      </div>
+      <div style="background:#fff;border:1px solid #dce3ff;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:10px;color:#667085;margin-bottom:4px;">Model</div>
+        <div style="font-size:12px;color:var(--p-navy);font-weight:600;">${modelLabel}</div>
+        <div style="font-size:10px;color:#667085;margin-top:2px;">Temp: ${st.temperature} · Max tokens: ${st.maxTokens}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #dce3ff;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:10px;color:#667085;margin-bottom:4px;">Random Seed</div>
+        <div style="font-size:12px;color:var(--p-navy);font-weight:600;">${st.seed || '<em style="color:#aaa;font-size:11px;">None (non-reproducible)</em>'}</div>
+        ${st.researcherNotes ? `<div style="font-size:10px;color:#667085;margin-top:2px;">Notes: ${esc(st.researcherNotes).substring(0,60)}${st.researcherNotes.length>60?'…':''}</div>` : ''}
+      </div>
+    </div>
+  </div>
+
+  <div class="pb-protocol">
+    <div class="pb-subhead">Machine-Readable Study Specification</div>
+    <div class="pb-code" id="pbSpec">${esc(spec)}</div>
+  </div>
+  <div class="pb-audit">
+    <div>✓ Agent transcript</div>
+    <div>✓ Model/version metadata</div>
+    <div>✓ Task &amp; agent instructions</div>
+    <div>✓ Random seed</div>
+    <div>✓ Scoring configuration</div>
+  </div>
+  <div class="pb-buttons">
+    <button class="pb-btn" onclick="go(st.step-1)">← Back</button>
+    <div style="display:flex;gap:8px;">
+      <button class="pb-btn" onclick="pbCopySpec()">Copy JSON</button>
+      <button class="pb-btn" onclick="pbDownloadSpec()">Download Protocol</button>
+      <button class="pb-btn" onclick="pbSaveHistory('Saved')">Save to History</button>
+      <button class="pb-btn primary" onclick="pbLaunch()">Start Experiment →</button>
+    </div>
+  </div>`;
+}
+
+/* ── Main render ── */
+function render() {
+  renderSteps();
+  const w = document.getElementById('pbWork');
+  if (!w) return;
+  const fns = [renderResearch, renderStructure, renderTask, renderTeam, renderExperiment, renderLLM, renderProtocol];
+  w.innerHTML = fns[st.step]();
+}
+
+function go(i) {
+  if (i < 0 || i >= STEPS.length) return;
+  st.step = i;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function useMockDemo() {
+  st.llmAssignment = 'Same model for all agents';
+  st.provider = 'Mock'; st.model = 'Mock Backend (Demo)'; st.customModelId = ''; st.apiKey = '';
+  render();
+}
+
+/* ── Copy / Download ── */
+function pbCopySpec() {
+  const el = document.getElementById('pbSpec');
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText);
+  alert('Study specification copied to clipboard.');
+}
+function pbDownloadSpec() {
+  const el = document.getElementById('pbSpec');
+  if (!el) return;
+  const blob = new Blob([el.innerText], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pure_ai_study_protocol.json';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ── History (localStorage) ── */
+const HIST_KEY = 'pbExperimentHistoryV1';
+function getHistory() { try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; } }
+function setHistory(items) { localStorage.setItem(HIST_KEY, JSON.stringify(items)); }
+
+function pbSaveHistory(status = 'Saved', silent = false) {
+  const items = getHistory();
+  const snap = JSON.parse(JSON.stringify(st));
+  snap.apiKey = ''; if (Array.isArray(snap.perAgentLLM)) snap.perAgentLLM.forEach(x => x.apiKey = '');
+  items.unshift({
+    id: 'exp_' + Date.now(), created_at: new Date().toISOString(),
+    type: 'Pure AI', task: displayTask(), agents: st.agents,
+    structure: st.structure, model: st.model, status,
+    label: st.conditionName || 'Untitled', snapshot: snap
+  });
+  setHistory(items.slice(0, 50));
+  if (!silent) alert('Configuration saved. API keys were not stored.');
+}
+
+/* ── Backend Launch ── */
+async function pbLaunch() {
+  ensureArrays();
+  const llmSlugs = LlmCatalog.buildLlmSlugs(st);
+  let isMock = llmSlugs.isMock;
+
+  // If no API key and not already mock, auto-fallback to mock
+  if (!isMock && !st.apiKey) {
+    isMock = true;
+  }
+
+  // Build backend payload
+  const taskType = st.task === 'Custom Task' ? 'custom' :
+    st.task === 'Hidden-Profile Decision Task' ? 'lost_at_sea' :
+    st.task === 'Specialist Coordination Task' ? 'specialist_coordination' :
+    st.task === 'Ranking / Selection Task' ? 'ranking' :
+    st.task === 'Idea Generation + Evaluation' ? 'idea_generation' : 'lost_at_sea';
+
+  const agentInstructions = st.composition === 'Homogeneous agents'
+    ? Array(st.agents).fill(st.agentDetails[0] || '')
+    : st.agentDetails.slice(0, st.agents);
+
+  const payload = {
+    num_simulations: st.reps,
+    concurrency: st.concurrency,
+    random_seed: st.seed ? parseInt(st.seed) : null,
+    experiment_label: st.conditionName || '',
+    researcher_notes: st.researcherNotes || '',
+    llm: {
+      multi_llm: st.llmAssignment !== 'Same model for all agents',
+      provider_model: isMock ? 'mock' : llmSlugs.provider_model,
+      selected_models: isMock
+        ? (llmSlugs.selected_models.length ? llmSlugs.selected_models.map(() => 'mock') : ['mock'])
+        : llmSlugs.selected_models,
+      api_key: st.apiKey || '',
+      temperature: st.temperature,
+      max_tokens: st.maxTokens,
+      base_url: st.baseURL || null,
+      timeout: st.timeout
+    },
+    task: {
+      type: taskType,
+      custom_prompt: st.customTaskPrompt || '',
+      is_scored: st.taskScored === 'Yes'
+    },
+    team: {
+      num_agents: st.agents,
+      num_rounds: st.rounds,
+      structure: ({
+        'Pooled': 'pooled',
+        'Sequential': 'sequential',
+        'Reciprocal': 'reciprocal_chain',
+        'Reciprocal — Chain': 'reciprocal_chain',
+        'Reciprocal — Comprehensive': 'reciprocal_comprehensive',
+        'Team — Comprehensive': 'reciprocal_comprehensive',
+        'Team - Comprehensive': 'reciprocal_comprehensive',
+        'Team / Comprehensive': 'reciprocal_comprehensive'
+      })[st.structure] || 'sequential',
+      reporter_agent: st.reporterAgent === 'None' ? null : parseInt(st.reporterAgent),
+      agent_configs: agentInstructions.map((desc, i) => ({ agent_id: i + 1, description: desc }))
+    }
+  };
+
+  try {
+    document.getElementById('pbProgressCard').style.display = 'block';
+    document.getElementById('pbStopBtn').style.display = '';
+    document.getElementById('pbStatusBadge').textContent = 'RUNNING';
+    document.getElementById('pbStatusBadge').className = 'pb-status running';
+    document.getElementById('pbProgressText').textContent = '0 / ' + st.reps + ' completed';
+    document.getElementById('pbProgressPct').textContent = '0%';
+    document.getElementById('pbProgressFill').style.width = '0%';
+    document.getElementById('pbErrorText').style.display = 'none';
+    document.getElementById('pbResultsActions').style.display = 'none';
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
+    const res = await fetch('/api/batch/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || data.error || 'Server error');
+
+    const batchId = data.job_id || data.experiment_id;
+    pbSaveHistory('Running', true);
+    pbPollProgress(batchId);
+  } catch (err) {
+    document.getElementById('pbStatusBadge').textContent = 'ERROR';
+    document.getElementById('pbStatusBadge').className = 'pb-status error';
+    document.getElementById('pbStopBtn').style.display = 'none';
+    document.getElementById('pbErrorText').textContent = err.message;
+    document.getElementById('pbErrorText').style.display = 'block';
+  }
+}
+
+let pbCurrentBatchId = null;
+
+/* ── Polling ── */
+let pbPollTimer = null;
+function pbPollProgress(batchId) {
+  pbCurrentBatchId = batchId;
+  clearInterval(pbPollTimer);
+  pbPollTimer = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/batch/${batchId}/status`);
+      const d = await res.json();
+      const done = d.completed || 0, total = d.total || 1;
+      const pct = Math.round(done / total * 100);
+      document.getElementById('pbProgressText').textContent = `${done} / ${total} completed`;
+      document.getElementById('pbProgressPct').textContent = pct + '%';
+      document.getElementById('pbProgressFill').style.width = pct + '%';
+      if (d.status === 'done' || d.status === 'error' || d.status === 'stopped') {
+        clearInterval(pbPollTimer);
+        const badge = document.getElementById('pbStatusBadge');
+        badge.textContent = d.status === 'done' ? 'DONE' : (d.status === 'stopped' ? 'STOPPED' : 'ERROR');
+        badge.className = 'pb-status ' + (d.status === 'done' ? 'done' : 'error');
+        document.getElementById('pbStopBtn').style.display = 'none';
+        if (d.status === 'done') {
+          const ra = document.getElementById('pbResultsActions');
+          ra.style.display = 'block';
+          document.getElementById('pbDashboardLink').href = `/experiment/${batchId}/dashboard`;
+        }
+        if (d.error) {
+          document.getElementById('pbErrorText').textContent = d.error;
+          document.getElementById('pbErrorText').style.display = 'block';
+        }
+      }
+    } catch { clearInterval(pbPollTimer); }
+  }, 2000);
+}
+
+async function pbStopExperiment() {
+  if (!pbCurrentBatchId) return;
+  try {
+    const res = await fetch(`/api/experiment/${pbCurrentBatchId}/stop`, { method: 'POST' });
+    const data = await res.json();
+    if (data.status === 'stopped' || data.error) {
+      clearInterval(pbPollTimer);
+      document.getElementById('pbStatusBadge').textContent = 'STOPPED';
+      document.getElementById('pbStatusBadge').className = 'pb-status error';
+      document.getElementById('pbStopBtn').style.display = 'none';
+      if (data.error && data.error !== 'job not running') {
+        document.getElementById('pbErrorText').textContent = data.error;
+        document.getElementById('pbErrorText').style.display = 'block';
+      }
+    }
+  } catch (err) {
+    clearInterval(pbPollTimer);
+    document.getElementById('pbStatusBadge').textContent = 'STOPPED';
+    document.getElementById('pbStatusBadge').className = 'pb-status error';
+    document.getElementById('pbStopBtn').style.display = 'none';
+  }
+}
+
+/* ── Boot ── */
+ensureArrays();
+render();
+</script>
+{% endblock %}

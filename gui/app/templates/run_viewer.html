@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Run Viewer - {{ experiment_id }}{% endblock %}
+
+{% block content %}
+<nav class="mt-4"><a href="/experiment/{{ experiment_id }}/dashboard">← Back to Dashboard</a></nav>
+
+<div class="flex-between mt-4">
+  <div>
+    <h1>Run Transcript Viewer</h1>
+    <p style="margin:0; font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--text-secondary);">
+      Experiment: {{ experiment_id }}
+    </p>
+  </div>
+  <div style="display:flex; gap:0.5rem; align-items:center;">
+    <label style="margin:0; font-size:0.9rem; font-weight:500;">Run #
+      <select id="runSelector" style="width:auto; min-width:100px;"></select>
+    </label>
+  </div>
+</div>
+
+<!-- Run metadata bar -->
+<div class="card mt-4" id="metaBar" style="background:rgba(35,45,75,0.03); border-color:var(--primary); display:none;">
+  <div style="display:flex; flex-wrap:wrap; gap:2rem; font-size:0.9rem;" id="runMeta"></div>
+</div>
+
+<!-- Transcript -->
+<div class="mt-4">
+  <h2>Conversation Transcript</h2>
+  <div id="fullTranscript" style="
+    background:#f8f9fa;
+    border:1px solid var(--card-border);
+    border-radius:var(--radius-md);
+    padding:2rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.88rem;
+    display:flex; flex-direction:column; gap:0.75rem;
+    min-height:200px;
+  ">
+    <div style="color:var(--text-secondary); text-align:center; padding:3rem;">Select a run to view the transcript.</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const expId = '{{ experiment_id }}';
+
+// Load runs list from dashboard endpoint
+(async function() {
+  const res = await fetch(`/api/experiment/${expId}/dashboard`);
+  const d = await res.json();
+  if (d.error) return;
+
+  const sel = document.getElementById('runSelector');
+  (d.runs || []).forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.sim_id;
+    opt.text = `Sim #${r.sim_id} (score: ${(r.score||0).toFixed(2)})`;
+    sel.appendChild(opt);
+  });
+
+  // Auto-load from ?sim= param
+  const params = new URLSearchParams(window.location.search);
+  const simParam = params.get('sim');
+  if (simParam) sel.value = simParam;
+
+  sel.addEventListener('change', loadRun);
+  if (sel.value) loadRun();
+})();
+
+async function loadRun() {
+  const simId = document.getElementById('runSelector').value;
+  if (!simId) return;
+
+  const res = await fetch(`/api/experiment/${expId}/run/${simId}`);
+  const run = await res.json();
+  if (run.error) { alert(run.error); return; }
+
+  // Metadata bar
+  const meta = document.getElementById('runMeta');
+  const metaBar = document.getElementById('metaBar');
+  metaBar.style.display = 'block';
+  const cfg = run.config || {};
+  const summary = run.summary || {};
+  const items = [
+    ['Sim ID', run.sim_id],
+    ['Agents', cfg.num_agents || '—'],
+    ['Structure', cfg.team_structure || '—'],
+    ['Score', (summary.agreement_score || summary.toy_agreement_score || 0).toFixed(3)],
+    ['Turns', summary.num_turns || '—'],
+    ['Tokens', (summary.total_tokens || 0).toLocaleString()],
+    ['Models', (summary.models_used || []).join(', ') || '—'],
+  ];
+  meta.innerHTML = items.map(([k,v]) =>
+    `<div><strong style="color:var(--text-secondary); display:block; font-size:0.8rem;">${k}</strong> <span style="color:var(--primary); text-transform:capitalize;">${v}</span></div>`
+  ).join('');
+
+  // Transcript
+  const container = document.getElementById('fullTranscript');
+  const transcript = run.transcript || [];
+  if (transcript.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-secondary); text-align:center;">No transcript data.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  transcript.forEach((t, i) => {
+    const isHuman = t.agent === 'Human' || t.actor_type === 'human';
+    const cls = isHuman ? 'log-human' : 'log-agent';
+    const modelTag = t.model ? ` <span style="font-size:0.7rem; background:rgba(35,45,75,0.08); padding:1px 6px; border-radius:4px;">${t.model}</span>` : '';
+    const groupTag = t.group ? ` <span style="font-size:0.7rem; background:rgba(229,114,0,0.1); color:var(--accent); padding:1px 6px; border-radius:4px;">${t.group}</span>` : '';
+
+    const line = document.createElement('div');
+    line.className = `log-line ${cls}`;
+    line.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <strong style="color:${isHuman ? 'var(--accent)' : 'var(--primary)'};">${t.agent}${modelTag}${groupTag}</strong>
+        <span style="font-size:0.7rem; color:var(--text-secondary);">Turn ${t.turn ?? i}${t.input_tokens ? ' · '+t.input_tokens+'→'+t.output_tokens+' tok' : ''}</span>
+      </div>
+      <div style="white-space:pre-wrap;">${t.text}</div>
+    `;
+    container.appendChild(line);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env*
+!.env.example
+*_secrets.py
+credentials.json
+service-account*.json
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+.data/
+.parquet/
+wandb/
+.mypy_cache/
+.pyrightcache/
+ruff_cache/
+outputs/
+logs/
+*.log
+.hydra/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# macOS system files
+.DS_Store
+
+# Temporary analysis and conversation files
+temp_*
+conversation_*
+*.csv
+
+# Sweep scripts
+experiments/sweeps/
+
+# Conversational analysis JSON files
+notebooks/conversational_analysis/**/*.json
+
+# Image files
+*.png
+
+# Config files
+pyrightconfig.json

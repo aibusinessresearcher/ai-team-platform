@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Task Library — AI Team Platform{% endblock %}
+
+{% block extra_head %}
+<style>
+  main { padding: 0 !important; }
+  :root {
+    --p-bg:#f6f7fb; --p-panel:#fff; --p-ink:#18202a; --p-muted:#667085;
+    --p-line:#e5e7eb; --p-navy:#1f2a44; --p-blue:#3454d1; --p-blue2:#eef2ff;
+    --p-purple:#6d4aff; --p-shadow:0 4px 20px rgba(31,42,68,.07);
+  }
+  body { background: var(--p-bg); }
+  .tl-shell { max-width: 1200px; margin: 0 auto; padding: 24px 28px 56px; }
+  .tl-hero { margin-bottom: 24px; }
+  .tl-hero .tag { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--p-blue); margin-bottom: 8px; }
+  .tl-hero h1 { font-size: 28px; font-weight: 700; color: var(--p-navy); margin: 0 0 8px; }
+  .tl-hero p  { font-size: 14px; color: var(--p-muted); margin: 0; max-width: 720px; line-height: 1.55; }
+  .tl-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .tl-card {
+    background: var(--p-panel); border: 1px solid var(--p-line);
+    border-radius: 14px; padding: 18px 18px 16px;
+    box-shadow: var(--p-shadow); display: flex; flex-direction: column;
+  }
+  .tl-kicker {
+    font-size: 10px; font-weight: 700; color: var(--p-purple);
+    text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px;
+  }
+  .tl-card h3 { font-size: 16px; font-weight: 700; color: var(--p-navy); margin: 0 0 8px; }
+  .tl-card p  { font-size: 13px; color: var(--p-muted); margin: 0; line-height: 1.5; flex: 1; }
+  .tl-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .tl-chip { font-size: 10px; color: #475467; background: #f2f4f7; border-radius: 999px; padding: 5px 8px; }
+  .tl-cite {
+    font-size: 11px; color: var(--p-muted); margin-top: 12px;
+    border-top: 1px solid #eef1f4; padding-top: 10px; line-height: 1.45;
+  }
+  .tl-actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .tl-btn {
+    font-size: 11px; font-weight: 600; padding: 7px 12px; border-radius: 8px;
+    border: 1px solid var(--p-line); background: #fff; color: #344054;
+    cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
+    gap: 5px; transition: .12s; font-family: inherit;
+  }
+  .tl-btn:hover { background: #f8fafc; border-color: #c9d3ff; color: var(--p-blue); }
+  .tl-btn.primary { background: var(--p-blue); color: #fff; border-color: var(--p-blue); }
+  .tl-btn.primary:hover { background: #2646c0; }
+  .custom-banner {
+    margin-top: 18px; background: var(--p-panel); border: 1px solid var(--p-line);
+    border-radius: 14px; padding: 20px 22px; box-shadow: var(--p-shadow);
+    display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  }
+  .custom-banner h3 { font-size: 15px; font-weight: 700; color: var(--p-navy); margin: 0 0 5px; }
+  .custom-banner p  { font-size: 13px; color: var(--p-muted); margin: 0; line-height: 1.5; max-width: 640px; }
+  .custom-banner .actions { display: flex; gap: 8px; flex-shrink: 0; }
+  @media (max-width: 860px) {
+    .tl-grid { grid-template-columns: 1fr; }
+    .custom-banner { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tl-shell">
+
+  <div class="tl-hero">
+    <div class="tag">Team Research Task Library</div>
+    <h1>Research-oriented team tasks</h1>
+    <p>Use tasks adapted from team and organizational research, while retaining a custom-task path for new domains and researcher-created protocols.</p>
+  </div>
+
+  <div class="tl-grid">
+
+    <!-- Hidden-Profile Decision Task -->
+    <div class="tl-card">
+      <div class="tl-kicker">Information integration</div>
+      <h3>Hidden-Profile Decision Task</h3>
+      <p>Unique and shared <em>information</em> is distributed across team members. The team succeeds only when unique information is surfaced and integrated into the final decision.</p>
+      <div class="tl-meta">
+        <span class="tl-chip">Information sharing</span>
+        <span class="tl-chip">Expertise recognition</span>
+        <span class="tl-chip">Objective scoring</span>
+      </div>
+      <div class="tl-cite">Adapted from classic hidden-profile team research. Unique information asymmetry requires active knowledge sharing and integration for a correct decision.</div>
+      <div class="tl-actions">
+        <a href="/pure-ai" class="tl-btn">Use in Pure AI Study</a>
+        <a href="/hitl" class="tl-btn">Use in HITL Study</a>
+      </div>
+    </div>
+
+    <!-- Specialist Coordination Task -->
+    <div class="tl-card">
+      <div class="tl-kicker">Distributed expertise</div>
+      <h3>Specialist Coordination Task</h3>
+      <p>Members hold differentiated expertise needed for a joint solution. Each agent is assigned a specialist role and must contribute domain-specific knowledge to reach a shared outcome — enabling study of expertise utilization, coordination, and knowledge integration.</p>
+      <div class="tl-meta">
+        <span class="tl-chip">Distributed knowledge</span>
+        <span class="tl-chip">Specialization</span>
+        <span class="tl-chip">Coordination</span>
+      </div>
+      <div class="tl-cite">Researcher can attach source publication and implementation notes. Each agent is given a domain-specific role and must contribute their expertise to reach a joint solution.</div>
+      <div class="tl-actions">
+        <a href="/pure-ai" class="tl-btn">Use in Pure AI Study</a>
+        <a href="/hitl" class="tl-btn">Use in HITL Study</a>
+      </div>
+    </div>
+
+    <!-- Ranking / Selection Task -->
+    <div class="tl-card">
+      <div class="tl-kicker">Decision making</div>
+      <h3>Ranking / Selection Task</h3>
+      <p>Teams evaluate alternatives using distributed criteria, providing transparent performance benchmarks and process traces.</p>
+      <div class="tl-meta">
+        <span class="tl-chip">Judgment</span>
+        <span class="tl-chip">Consensus</span>
+        <span class="tl-chip">Decision quality</span>
+      </div>
+      <div class="tl-cite">Task metadata stores construct mapping and scoring rubric. Supports both scored (expert-ranked reference) and qualitative outcomes.</div>
+      <div class="tl-actions">
+        <a href="/pure-ai" class="tl-btn">Use in Pure AI Study</a>
+        <a href="/hitl" class="tl-btn">Use in HITL Study</a>
+      </div>
+    </div>
+
+    <!-- Idea Generation + Evaluation -->
+    <div class="tl-card">
+      <div class="tl-kicker">Creativity &amp; innovation</div>
+      <h3>Idea Generation + Evaluation</h3>
+      <p>Separate divergence and convergence phases to study how team structure shapes novelty, participation, and selection.</p>
+      <div class="tl-meta">
+        <span class="tl-chip">Creativity</span>
+        <span class="tl-chip">Mutual adjustment</span>
+        <span class="tl-chip">Process trace</span>
+      </div>
+      <div class="tl-cite">Configurable rubric and phase structure. Divergence phase captures unique ideas; convergence phase evaluates and selects. Suitable for brainstorming and innovation research.</div>
+      <div class="tl-actions">
+        <a href="/pure-ai" class="tl-btn">Use in Pure AI Study</a>
+        <a href="/hitl" class="tl-btn">Use in HITL Study</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Custom Task Banner -->
+  <div class="custom-banner">
+    <div>
+      <h3>Custom Task</h3>
+      <p>Bring your own task prompt, instructions, scenario, and optional scoring guidance. Available in both the Pure AI and Human-in-the-Loop builders. Mark as scored if a correct answer exists, or unscored for qualitative analysis.</p>
+    </div>
+    <div class="actions">
+      <a href="/pure-ai" class="tl-btn primary">Configure in Pure AI Builder</a>
+      <a href="/hitl" class="tl-btn">Configure in HITL Builder</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

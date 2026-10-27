@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Research Capabilities — AI Team Platform{% endblock %}
+
+{% block extra_head %}
+<style>
+  main { padding: 0 !important; }
+  :root {
+    --p-bg:#f6f7fb; --p-panel:#fff; --p-ink:#18202a; --p-muted:#667085;
+    --p-line:#e5e7eb; --p-navy:#1f2a44; --p-blue:#3454d1; --p-blue2:#eef2ff;
+    --p-shadow:0 4px 20px rgba(31,42,68,.07);
+  }
+  body { background: var(--p-bg); }
+  .rc-shell { max-width: 1200px; margin: 0 auto; padding: 24px 28px 56px; }
+  .rc-hero { margin-bottom: 24px; }
+  .rc-hero .tag { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--p-blue); margin-bottom: 8px; }
+  .rc-hero h1 { font-size: 28px; font-weight: 700; color: var(--p-navy); margin: 0 0 8px; }
+  .rc-hero p  { font-size: 14px; color: var(--p-muted); margin: 0; max-width: 720px; line-height: 1.55; }
+  .rc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .rc-cap {
+    background: var(--p-panel); border: 1px solid var(--p-line);
+    border-radius: 14px; padding: 18px 18px 16px;
+    box-shadow: var(--p-shadow);
+  }
+  .rc-icon { font-size: 22px; color: var(--p-blue); margin-bottom: 10px; line-height: 1; }
+  .rc-cap h4 { font-size: 14px; font-weight: 700; color: var(--p-navy); margin: 0 0 7px; }
+  .rc-cap p  { font-size: 13px; color: var(--p-muted); line-height: 1.5; margin: 0; }
+  @media (max-width: 960px) { .rc-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 640px) { .rc-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rc-shell">
+
+  <div class="rc-hero">
+    <div class="tag">Research Capabilities</div>
+    <h1>What researchers can manipulate and observe</h1>
+    <p>The interface keeps organizational design prominent while retaining the technical controls needed to run reproducible multi-agent studies.</p>
+  </div>
+
+  <div class="rc-grid">
+
+    <div class="rc-cap">
+      <div class="rc-icon">⇄</div>
+      <h4>Interdependence</h4>
+      <p>Pooled, sequential, reciprocal, intensive/team, and extensible custom interaction structures.</p>
+    </div>
+
+    <div class="rc-cap">
+      <div class="rc-icon">▥</div>
+      <h4>Team composition</h4>
+      <p>Homogeneous or heterogeneous agents with flexible agent-specific instructions and context.</p>
+    </div>
+
+    <div class="rc-cap">
+      <div class="rc-icon">♙</div>
+      <h4>Human participant intervention</h4>
+      <p>Pause/resume the AI conversation and send an additional message to one, several, or all agents.</p>
+    </div>
+
+    <div class="rc-cap">
+      <div class="rc-icon">◫</div>
+      <h4>Task paradigms</h4>
+      <p>Team-research tasks plus custom tasks with researcher-defined prompts and scoring guidance.</p>
+    </div>
+
+    <div class="rc-cap">
+      <div class="rc-icon">⚙</div>
+      <h4>LLM settings</h4>
+      <p>Provider, model, temperature, output limits, connection settings, and shared or per-agent assignments.</p>
+    </div>
+
+    <div class="rc-cap">
+      <div class="rc-icon">✓</div>
+      <h4>Auditability</h4>
+      <p>Configurations, prompts, model versions, transcripts, intervention logs, scoring rules, and exports.</p>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
