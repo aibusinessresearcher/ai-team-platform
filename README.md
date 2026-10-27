@@ -4,6 +4,7 @@ Study how AI teams share information, coordinate work, and respond to human inte
 
 | What would you like to do? | Start here | LLM API key? |
 | --- | --- | --- |
+| Explore the GUI without installing anything | [Public hosted GUI](https://team-simulation-platform.onrender.com/) | No, with Mock agents |
 | Try demonstrations and participant sessions on your computer | [Run the GUI locally](#run-the-gui-locally) | No, with Mock agents |
 | Run the scored student-body-president task with real models | [Run the research engine](#run-the-research-engine) | Only for an actual simulation |
 
