@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "teamwork"
 version = "0.1.0"
 description = "Toolkit for experimenting with multi-agent LLM teamwork dynamics"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.12"
 dependencies = [
     "openai==3.39.0",
     "anthropic==2.3.0",

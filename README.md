@@ -36,9 +36,25 @@ Open a command window **in the package folder**, without typing a sample folder 
 - **macOS:** Open Terminal. Type `cd `, including the space, drag the `ai-team-platform` folder from Finder into the Terminal window, then press Return.
 - **Linux:** Open `ai-team-platform` in your file manager and use **Open in Terminal**, if available. Otherwise, type `cd ` in Terminal, paste the folder's full path in double quotes, and press Enter.
 
-Check the folder contents with `Get-ChildItem` on Windows or `ls` on macOS/Linux: both `gui` and `backend` should appear. Check Python with `py -3.11 --version` on Windows or `python3.11 --version` on macOS/Linux.
+Check the folder contents with `Get-ChildItem` on Windows or `ls` on macOS/Linux: both `gui` and `backend` should appear.
 
-Each component gets its own `.venv`, a private set of Python packages. No activation command is needed.
+### Install Python 3.11
+
+Use Python 3.11 for the local setup. You can install it alongside another Python version; you do not need to uninstall the other version.
+
+**Windows:** Open the [Python 3.11.9 release page](https://www.python.org/downloads/release/python-3119/). Under **Files**, download **Windows installer (64-bit)** and run it. Keep **pip** and the **Python launcher** selected during installation. Open a new PowerShell window in the package folder using the File Explorer method above, then check:
+
+    py -3.11 --version
+    py -3.11 -m pip --version
+
+**macOS:** On the same release page, download **macOS 64-bit universal2 installer** under **Files** and run it. Open a new Terminal window, return to the package folder using the method above, then check:
+
+    python3.11 --version
+    python3.11 -m pip --version
+
+**Linux:** Install Python 3.11 and its virtual-environment package using your distribution’s package manager. Package names and availability vary by distribution. Check the installation with `python3.11 --version`.
+
+Continue with the virtual-environment commands below. If you previously created a `.venv` folder using another Python version, remove that `.venv` folder and create it again using Python 3.11.
 
 ## Run the GUI locally
 
@@ -124,6 +140,85 @@ The terminal shows agent contributions and the answer/score. Keep four agents fo
 
 Press **Ctrl+C** to interrupt a running simulation; unfinished runs may not save final results. Use fictional information for demonstrations and follow your institution's requirements before conducting participant research.
 
+### Try different simulation settings
+
+Run these commands from `ai-team-platform/backend` after completing the backend installation and adding the relevant API key to `.env`. Each command makes model API calls and may incur charges. To check the settings without making an API call, add `--cfg job` to the end of any command.
+
+The supplied student-body-president task uses four agents. The first five examples change the interdependence structure and use the provider and model specified in `interactive_experiments/configs/task/student_body_president.yaml`.
+
+**Windows PowerShell**
+
+```powershell
+# Pooled: each agent submits an independent answer
+.\.venv\Scripts\python.exe interactive_experiments/run_experiment.py task.team_interdependence_type=pooled task.max_rounds=1 task.human_interaction=false
+
+# Sequential: agents pass information along a chain for two rounds
+.\.venv\Scripts\python.exe interactive_experiments/run_experiment.py task.team_interdependence_type=sequential task.max_rounds=2 task.human_interaction=false
+
+# Reciprocal subgroups: subgroups discuss locally, then representatives discuss
+.\.venv\Scripts\python.exe interactive_experiments/run_experiment.py task.team_interdependence_type=reciprocal_subgroups task.max_rounds=2 task.small_group_rounds=2 task.human_interaction=false
+
+# Team/comprehensive: all agents share a discussion; no human intervention
+.\.venv\Scripts\python.exe interactive_experiments/run_experiment.py task.team_interdependence_type=team task.max_rounds=2 task.human_interaction=false
+
+# Team/comprehensive with human intervention: PowerShell prompts for a message before round two
+.\.venv\Scripts\python.exe interactive_experiments/run_experiment.py task.team_interdependence_type=team task.max_rounds=2 task.human_interaction=true
+```
+
+**macOS/Linux Terminal**
+
+```bash
+# Pooled: each agent submits an independent answer
+.venv/bin/python interactive_experiments/run_experiment.py task.team_interdependence_type=pooled task.max_rounds=1 task.human_interaction=false
+
+# Sequential: agents pass information along a chain for two rounds
+.venv/bin/python interactive_experiments/run_experiment.py task.team_interdependence_type=sequential task.max_rounds=2 task.human_interaction=false
+
+# Reciprocal subgroups: subgroups discuss locally, then representatives discuss
+.venv/bin/python interactive_experiments/run_experiment.py task.team_interdependence_type=reciprocal_subgroups task.max_rounds=2 task.small_group_rounds=2 task.human_interaction=false
+
+# Team/comprehensive: all agents share a discussion; no human intervention
+.venv/bin/python interactive_experiments/run_experiment.py task.team_interdependence_type=team task.max_rounds=2 task.human_interaction=false
+
+# Team/comprehensive with human intervention
+.venv/bin/python interactive_experiments/run_experiment.py task.team_interdependence_type=team task.max_rounds=2 task.human_interaction=true
+```
+
+Human input is currently implemented for the **team** structure only. It appears in the terminal between rounds, so use at least two rounds. It is separate from the GUI participant interface. Pooled runs always produce one independent answer per agent, regardless of the `max_rounds` setting.
+
+To select a provider and model for **every agent**, use one of these complete one-round team examples. The corresponding key must be present in `.env`: `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`.
+
+**Windows PowerShell**
+
+```powershell
+# Google Gemini
+.\.venv\Scripts\python.exe interactive_experiments/run_experiment.py task.team_interdependence_type=team task.max_rounds=1 task.human_interaction=false task.backend.provider=gemini_direct task.backend.model=gemini-3.8-flash task.backend.temperature=null
+
+# OpenAI
+.\.venv\Scripts\python.exe interactive_experiments/run_experiment.py task.team_interdependence_type=team task.max_rounds=1 task.human_interaction=false task.backend.provider=openai task.backend.model=gpt-6-luna task.backend.temperature=null task.seed=null
+
+# Anthropic
+.\.venv\Scripts\python.exe interactive_experiments/run_experiment.py task.team_interdependence_type=team task.max_rounds=1 task.human_interaction=false task.backend.provider=anthropic task.backend.model=claude-sonnet-5-5 task.backend.temperature=null
+```
+
+**macOS/Linux Terminal**
+
+```bash
+# Google Gemini
+.venv/bin/python interactive_experiments/run_experiment.py task.team_interdependence_type=team task.max_rounds=1 task.human_interaction=false task.backend.provider=gemini_direct task.backend.model=gemini-3.8-flash task.backend.temperature=null
+
+# OpenAI
+.venv/bin/python interactive_experiments/run_experiment.py task.team_interdependence_type=team task.max_rounds=1 task.human_interaction=false task.backend.provider=openai task.backend.model=gpt-6-luna task.backend.temperature=null task.seed=null
+
+# Anthropic
+.venv/bin/python interactive_experiments/run_experiment.py task.team_interdependence_type=team task.max_rounds=1 task.human_interaction=false task.backend.provider=anthropic task.backend.model=claude-sonnet-5-5 task.backend.temperature=null
+```
+
+**Alternative settings**: the commands above override the YAML defaults only for that run. For changes you want to keep across runs, edit settings such as `provider`, `model`, `max_rounds`, or `human_interaction` in `interactive_experiments/configs/task/student_body_president.yaml` and omit the matching command overrides. All agents use the same provider and model.
+
+**Adding a new LLM provider** (developers only; most researchers can skip this). A provider that is not already supported cannot be added by changing the YAML file alone. A developer must add its API connection and register its provider name in `teamwork/backends.py`, then add API-key lookup in `teamwork/backend_utils.py`. If the connection needs another Python package, that dependency belongs in `pyproject.toml`; the required environment-variable name can be documented in `.env.example`. Once those changes are working, researchers can select the new provider and model in `interactive_experiments/configs/task/student_body_president.yaml`.
+
+
 ## Find backend results
 
 After a successful simulation, open **`ai-team-platform/backend/outputs/`** in your file browser. Open the run's date folder, then its time-named folder. It contains:
@@ -139,6 +234,7 @@ The backend score is **L1 ranking error**: 0 is exact, and lower is better. The 
 
 ## First-run help
 
+- **Errors after switching Python versions:** If you created a `.venv` using another Python version, delete only that program's `.venv` folder and repeat its installation commands. Installing Python 3.11 does not change an existing `.venv`.
 - **Python command unavailable:** Install Python 3.11 and its launcher/venv support, reopen the terminal, and repeat the version check.
 - **File or module not found:** Use the correct component folder and its `.venv` Python. GUI commands run beside `run.py`; backend commands beside `pyproject.toml`.
 - **Port 8000 busy or participant session problems:** See [GUI troubleshooting](gui/README.md#troubleshooting).
