@@ -9,6 +9,7 @@ import asyncio
 import json
 import os
 import random
+import threading
 import uuid
 from pathlib import Path
 from typing import Dict, Literal, Optional, Any
@@ -20,7 +21,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
-from .agents import agent_turn, answer_human_question, make_agent_names, summarize_transcript
+from .agents import agent_turn, answer_human_question, make_agent_names
+from . import research_bridge
 from . import storage
 from .auth import (
     RESEARCHER_PASSWORD,
@@ -41,6 +43,17 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 @app.on_event("startup")
 def startup():
     storage.init_storage()
+
+
+@app.get("/api/health")
+async def health():
+    ready, detail = research_bridge.engine_status()
+    return {
+        "gui": "ok",
+        "research_engine": "ok" if ready else "unavailable",
+        "research_task": "student_body_president" if ready else None,
+        "detail": detail,
+    }
 
 
 BATCH_JOBS: Dict[str, dict] = {}
@@ -162,28 +175,8 @@ async def _run_round(history: list[dict], agent_names: list[str], params: dict, 
 
 # ---------------- Flow 1: AI-only batch simulations ----------------
 async def run_single_simulation(job_id: str, sim_id: int, params: dict) -> dict:
-    num_agents = params.get("num_agents", 3)
-    num_rounds = params.get("num_rounds", 6)
-    agent_names = make_agent_names(num_agents)
-    p = dict(params)
-    seed = params.get("random_seed")
-    p["rng_seed"] = None if seed is None else seed + sim_id
-    history: list[dict] = []
-    for round_idx in range(num_rounds):
-        history.extend(await _run_round(history, agent_names, p, round_idx))
-    result = {
-        "sim_id": sim_id,
-        "config": {
-            "num_agents": num_agents,
-            "num_rounds": num_rounds,
-            "team_structure": params.get("team_structure", "sequential"),
-            "multi_llm": params.get("multi_llm", False),
-            "selected_models": params.get("selected_models", []),
-            "llm_tasks": params.get("llm_tasks", {})
-        },
-        "transcript": history,
-        "summary": summarize_transcript(history, agent_names, p.get("rng_seed")),
-    }
+    """Each replication is one run of the research engine's scored task."""
+    result = await asyncio.to_thread(research_bridge.run_gui_simulation, sim_id, params)
     await storage.log_batch_result(job_id, result)
     return result
 
@@ -246,6 +239,8 @@ async def start_batch(payload: Dict[str, Any]):
     else:
         params_dict = payload
 
+    params_dict["research_engine"] = True
+    params_dict["research_task"] = "student_body_president"
     total_sims = params_dict.get("num_simulations", 20)
     BATCH_JOBS[job_id] = {"status": "running", "completed": 0, "total": total_sims, "results": None, "config": public_config(params_dict)}
     storage.save_batch_config(job_id, public_config(params_dict))
@@ -278,6 +273,9 @@ async def stop_experiment(job_id: str):
         # Check if it's a HITL session
         session = SESSIONS.get(job_id)
         if session:
+            session.stop_event.set()
+            session.round_gate.set()
+            session.running_gate.set()
             if session.run_task and not session.run_task.done():
                 session.run_task.cancel()
                 return {"status": "stopped"}
@@ -331,6 +329,8 @@ class HumanLoopSession:
         self.interventions: asyncio.Queue = asyncio.Queue()
         self.websocket: Optional[WebSocket] = None
         self.run_task: Optional[asyncio.Task] = None
+        self.stop_event = threading.Event()
+        self.engine_messages: asyncio.Queue = asyncio.Queue()
 
     async def send(self, payload: dict):
         if self.websocket:
@@ -375,6 +375,7 @@ class HumanLoopSession:
             "recipient": recipient
         }
         self.history.append(human_entry)
+        self.engine_messages.put_nowait(text)
         await storage.log_session_event(self.session_id, "human", event_type, text, {"recipient": recipient} if recipient else {})
         await self.send({"type": "message", **human_entry})
 
@@ -384,42 +385,64 @@ class HumanLoopSession:
             await storage.log_session_event(self.session_id, recipient, "AGENT_REPLY_TO_HUMAN", reply["text"], {"recipient": "human"})
             await self.send({"type": "message", **reply, "event_type": "AGENT_REPLY_TO_HUMAN"})
 
+    async def _emit_engine_turn(self, record: dict):
+        self.history.append(record)
+        await storage.log_session_event(
+            self.session_id, record["agent"], "AGENT_MESSAGE", record["text"], {"round": record.get("round")}
+        )
+        await self.send({"type": "message", **record, "event_type": "AGENT_MESSAGE"})
+
+    async def _await_engine_human(self, round_state: dict) -> str:
+        finished = round_state["index"] + 1
+        round_state["index"] = finished
+        await self.send({
+            "type": "round_end",
+            "round": finished,
+            "total_rounds": self.num_rounds,
+            "is_last_round": False,
+        })
+        self.round_gate.clear()
+        await self.round_gate.wait()
+        if self.stop_event.is_set():
+            raise RuntimeError("Experiment stopped by user.")
+        chunks = []
+        while not self.engine_messages.empty():
+            chunks.append(self.engine_messages.get_nowait())
+        return "\n".join(chunks)
+
     async def run(self):
-        await storage.log_session_event(self.session_id, "system", "SESSION_STARTED", "Agent team started")
+        await storage.log_session_event(self.session_id, "system", "SESSION_STARTED", "Research engine started")
+        loop = asyncio.get_running_loop()
+        round_state = {"index": 0}
+
+        def on_turn(record: dict):
+            if self.stop_event.is_set():
+                raise RuntimeError("Experiment stopped by user.")
+            payload = dict(record)
+            payload["round"] = round_state["index"]
+            asyncio.run_coroutine_threadsafe(self._emit_engine_turn(payload), loop).result()
+
+        def on_between() -> str:
+            if self.stop_event.is_set():
+                raise RuntimeError("Experiment stopped by user.")
+            return asyncio.run_coroutine_threadsafe(self._await_engine_human(round_state), loop).result()
+
         try:
-            for round_idx in range(self.num_rounds):
-                await self.running_gate.wait()
-                await self.round_gate.wait()
-                await self.flush_interventions()
-                await self.running_gate.wait()
-                live_params = dict(self.params)
-                live_params["rng_seed"] = self.params.get("random_seed")
-                results = await _run_round(self.history, self.agent_names, live_params, round_idx)
-                for result in results:
-                    self.history.append(result)
-                    await storage.log_session_event(self.session_id, result["agent"], "AGENT_MESSAGE", result["text"], {"round": round_idx})
-                    await self.send({"type": "message", **result, "event_type": "AGENT_MESSAGE", "round": round_idx})
-                await self.flush_interventions()
-
-                is_last = (round_idx + 1 >= self.num_rounds)
-                await self.send({
-                    "type": "round_end",
-                    "round": round_idx + 1,
-                    "total_rounds": self.num_rounds,
-                    "is_last_round": is_last
-                })
-
-                if not is_last:
-                    self.round_gate.clear()
-                    if self.timing == "After each round":
-                        self.running_gate.clear()
-                        await storage.log_session_event(self.session_id, "system", "ROUND_PAUSE", f"Paused after round {round_idx + 1} for HITL intervention check")
-                        await self.send({"type": "status", "text": "paused_round_end", "round": round_idx + 1})
-
-            summary = summarize_transcript(self.history, self.agent_names, self.params.get("random_seed"))
+            result = await asyncio.to_thread(
+                research_bridge.run_gui_simulation, 1, self.params, on_between, on_turn
+            )
+            summary = result["summary"]
+            await self.send({
+                "type": "round_end",
+                "round": self.num_rounds,
+                "total_rounds": self.num_rounds,
+                "is_last_round": True,
+            })
             await storage.log_session_event(self.session_id, "system", "SESSION_COMPLETED", "Session completed", summary)
             await self.send({"type": "done", "summary": summary})
         except asyncio.CancelledError:
+            self.stop_event.set()
+            self.round_gate.set()
             await storage.log_session_event(self.session_id, "system", "SESSION_STOPPED", "Session stopped by user")
             await self.send({"type": "error", "text": "Session stopped by user."})
         except Exception as exc:
@@ -459,6 +482,8 @@ async def start_session(payload: Dict[str, Any]):
     else:
         params_dict = payload
 
+    params_dict["research_engine"] = True
+    params_dict["research_task"] = "student_body_president"
     session = HumanLoopSession(session_id, params_dict)
     SESSIONS[session_id] = session
     live = any(m != "mock" for m in params_dict.get("selected_models", [params_dict.get("provider_model", "mock")]))
@@ -580,6 +605,9 @@ async def experiment_dashboard(job_id: str):
     output_tokens = [s.get("total_output_tokens", 0) for s in summaries]
     latencies = [s.get("avg_latency_ms", 0) for s in summaries]
 
+    l1_values = [s.get("l1_error") for s in summaries if s.get("l1_error") is not None]
+    mean_l1 = round(sum(l1_values) / len(l1_values), 3) if l1_values else None
+
     n = len(scores) or 1
     mean_score = round(sum(scores) / n, 3)
     sorted_scores = sorted(scores)
@@ -599,6 +627,7 @@ async def experiment_dashboard(job_id: str):
         "num_completed": len(results),
         "num_failed": (job.get("total", 0) - len(results)),
         "mean_score": mean_score,
+        "mean_l1": mean_l1,
         "median_score": median_score,
         "std_dev": std_dev,
         "min_score": min_score,

@@ -35,6 +35,10 @@
           <div class="stat-value" id="meanScore">--</div>
           <div class="stat-label">Mean Agreement Score</div>
         </div>
+        <div class="stat-box" id="l1Box" style="display:none;">
+          <div class="stat-value" id="meanL1">--</div>
+          <div class="stat-label">Mean L1 Ranking Error</div>
+        </div>
         <div class="stat-box">
           <div class="stat-value" id="medianScore">--</div>
           <div class="stat-label">Median Score</div>
@@ -137,7 +141,7 @@
   // Config summary
   const cfg = d.config || {};
   const items = [
-    ['Task', cfg.task_type || '—'],
+    ['Task', cfg.research_task || cfg.task_type || '—'],
     ['Agents', cfg.num_agents || '—'],
     ['Rounds', cfg.num_rounds || '—'],
     ['Structure', cfg.team_structure || '—'],
@@ -150,6 +154,10 @@
 
   // Stats
   document.getElementById('meanScore').innerText = d.mean_score;
+  if (d.mean_l1 != null) {
+    document.getElementById('l1Box').style.display = 'block';
+    document.getElementById('meanL1').innerText = d.mean_l1;
+  }
   document.getElementById('medianScore').innerText = d.median_score;
   document.getElementById('stdDev').innerText = d.std_dev;
   document.getElementById('scoreRange').innerText = `${d.min_score} – ${d.max_score}`;

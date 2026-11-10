@@ -1,0 +1,25 @@
+# One web service. The GUI imports the research engine; there is no second server.
+#
+# Root Directory: (repository root)
+# Build Command:  pip install -r requirements.txt
+# Start Command:  cd gui && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
+services:
+  - type: web
+    name: ai-teams-platform
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd gui && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /login
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: RESEARCHER_PASSWORD
+        generateValue: true

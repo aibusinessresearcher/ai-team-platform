@@ -8,7 +8,7 @@ Study how AI teams share information, coordinate work, and respond to human inte
 | Try demonstrations and participant sessions on your computer | [Run the GUI locally](#run-the-gui-locally) | No, with Mock agents |
 | Run the scored student-body-president task with real models | [Run the research engine](#run-the-research-engine) | Only for an actual simulation |
 
-**The GUI and backend research engine are not yet integrated.** Configuring or launching a study in the GUI does not launch the backend task. The two programs have separate installations and results.
+**Launching a study in the GUI runs the backend research engine.** The browser sends the team structure, rounds, and model to the student-body-president task. Mock Demo scores that task locally. A live provider uses the key from the form or from the server environment. Results, including L1 ranking error, appear in the GUI dashboard. The command-line runner in `backend/` still works on its own.
 
 For GUI demonstrations, select **Use Mock Demo** in LLM Configuration and leave the API key blank. Follow the [GUI walkthroughs](gui/README.md#try-a-pure-ai-demonstration).
 

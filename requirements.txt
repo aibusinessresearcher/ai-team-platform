@@ -1,0 +1,3 @@
+# One install for Render: the web app plus the research engine it imports.
+-r gui/requirements.txt
+-e ./backend

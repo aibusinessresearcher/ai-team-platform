@@ -2,7 +2,7 @@
 
 Use the browser interface (GUI) to design Pure AI or human-in-the-loop studies and explore their workflow with **Mock agents**. Mock agents use prewritten dialogue; their displayed scores and token counts are demonstration values, not research findings or billed model usage.
 
-**The GUI is not yet connected to the separate backend research engine.** A browser study does not launch that engine's scored task. For backend installation and results, see the package's [Start Here guide](../README.md#run-the-research-engine).
+**A browser study launches the backend research engine.** Pure AI and human-in-the-loop sessions run the student-body-president ranking task and return its L1 score to the dashboard. Mock Demo does this without an API call. For the command-line runner, see the package's [Start Here guide](../README.md#run-the-research-engine).
 
 ## Local demonstrations
 
@@ -52,7 +52,7 @@ Stop the server with **Ctrl+C in that terminal**. Closing the browser alone does
 4. Review the configuration. **Download Protocol** saves your design choices. Click **Start Experiment** and wait for completion.
 5. Open **View Results Dashboard**. Use **Download JSON** to save results and **View Runs** to read each transcript.
 
-With these settings, expect one completed run and eight agent messages. Mock dialogue does not validate the effects of custom prompts, agent instructions, or other study choices. For example, **Hidden-Profile Decision Task** currently maps to Lost-at-Sea demonstration dialogue, not the backend's student-body-president task.
+With these settings, expect one completed run of the student-body-president task. Mock Demo returns a scripted ranking so the L1 score can be shown without a model call. Custom task text in the builder is stored with the study, and the scored run uses the research engine's student-body-president prompt.
 
 ### Communication patterns in the GUI
 

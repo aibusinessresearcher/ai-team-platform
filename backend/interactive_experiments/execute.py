@@ -63,13 +63,32 @@ def human_agent(agents):
     # Broadcast human agent message to all agents
     for agent in agents:
         agent.trajectory.append(human_turn)
+
+
+def _pause_between_rounds(config, agents, on_between_rounds=None):
+    """Let a human add a message before the next round.
+
+    The command-line runner still prompts on the team structure. The web app
+    passes on_between_rounds so a participant message can be injected instead
+    of reading from the terminal.
+    """
+    if on_between_rounds is not None:
+        text = on_between_rounds()
+        text = "" if text is None else str(text).strip()
+        if text:
+            human_turn = Turn(speaker_id=-1, content=text)
+            for agent in agents:
+                agent.trajectory.append(human_turn)
+        return
+    if getattr(config, "human_interaction", False) and getattr(config, "team_interdependence_type", "") == "team":
+        human_agent(agents)
                    
     
 # ------------------------
 # Team Interdependence Types   
 # ------------------------
 
-def pooled_task(agents, input_prompts, config):
+def pooled_task(agents, input_prompts, config, on_between_rounds=None):
 
     # returns a list of answers and scores - one pair for each agent
     # ONLY ONE ROUND
@@ -101,7 +120,7 @@ def pooled_task(agents, input_prompts, config):
     
     return answers, scores
 
-def sequential_task(agents, input_prompts, config):
+def sequential_task(agents, input_prompts, config, on_between_rounds=None):
 
     # returns a list of answers and scores, one pair per round
     
@@ -109,7 +128,9 @@ def sequential_task(agents, input_prompts, config):
     scores = []
     
     for r in range(config.max_rounds):
-    
+        if r != 0:
+            _pause_between_rounds(config, agents, on_between_rounds)
+
         for i, agent in enumerate(agents):
             
             # do task
@@ -167,7 +188,7 @@ def small_group_discussion(agents, input_prompts, config, sgr, st_agt, g):
                 agents[other_agent_idx].trajectory.append(turn)
     
 
-def reciprocal_chain_task(agents, input_prompts, config):
+def reciprocal_chain_task(agents, input_prompts, config, on_between_rounds=None):
 
     # returns a list of answers and scores, one pair per round\
 
@@ -176,6 +197,8 @@ def reciprocal_chain_task(agents, input_prompts, config):
 
     # loop over chain rounds
     for r in range(config.max_rounds):
+        if r != 0:
+            _pause_between_rounds(config, agents, on_between_rounds)
 
         # loop over small group discussion
         for i in range(len(config.small_groups)):
@@ -208,7 +231,7 @@ def reciprocal_chain_task(agents, input_prompts, config):
                 
     return answers, scores    
 
-def reciprocal_subgroups_task(agents, input_prompts, config):
+def reciprocal_subgroups_task(agents, input_prompts, config, on_between_rounds=None):
 
     # returns a list of answers and scores, one pair per round
 
@@ -217,6 +240,8 @@ def reciprocal_subgroups_task(agents, input_prompts, config):
 
     # loop over rounds
     for r in range(config.max_rounds):
+        if r != 0:
+            _pause_between_rounds(config, agents, on_between_rounds)
 
         # loop over small group discussions
         for i in range(len(config.small_groups)):
@@ -272,7 +297,7 @@ def reciprocal_subgroups_task(agents, input_prompts, config):
     
     
 
-def team_task(agents, input_prompts, config):
+def team_task(agents, input_prompts, config, on_between_rounds=None):
 
     # returns a list of answers and scores, one pair per round
     
@@ -285,8 +310,7 @@ def team_task(agents, input_prompts, config):
     for r in range(config.max_rounds):
 
         if r != 0: # skip human agent in first round
-            if config.human_interaction:
-                human_agent(agents)
+            _pause_between_rounds(config, agents, on_between_rounds)
         
         if config.randomize_speaking_order:
             agt_order = random.sample(range(len(agents)), len(agents))

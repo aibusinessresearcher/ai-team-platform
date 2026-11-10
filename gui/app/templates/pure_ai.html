@@ -751,7 +751,7 @@ function apiField(value, provider, model, idx) {
   <div class="pb-field">
     <label>API Key ${mock ? '(not required for Mock Demo)' : '(required for live model access)'}</label>
     <input type="password" value="${mock ? '' : esc(value)}" ${mock ? 'disabled' : ''} placeholder="${mock ? 'Mock agents run without a key' : 'Enter API key'}" oninput="${oninput}">
-    <div class="pb-note">API keys are used only for the active session and are not saved in Experiment History or exported protocols.</div>
+    <div class="pb-note">A key typed here is used for this launch and is not saved. Leave it blank to use the server key (OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY). Mock Demo does not call a model.</div>
   </div>`;
 }
 
@@ -1012,12 +1012,7 @@ function pbSaveHistory(status = 'Saved', silent = false) {
 async function pbLaunch() {
   ensureArrays();
   const llmSlugs = LlmCatalog.buildLlmSlugs(st);
-  let isMock = llmSlugs.isMock;
-
-  // If no API key and not already mock, auto-fallback to mock
-  if (!isMock && !st.apiKey) {
-    isMock = true;
-  }
+  const isMock = llmSlugs.isMock;
 
   // Build backend payload
   const taskType = st.task === 'Custom Task' ? 'custom' :
